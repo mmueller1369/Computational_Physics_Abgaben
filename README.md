@@ -1,6 +1,4 @@
-# Computational-Physics
-
-Computational Physics Excersice Sheets
+# Computational Physics
 
 # Excersice Sheet 01
 
