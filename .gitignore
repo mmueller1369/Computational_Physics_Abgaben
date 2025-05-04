@@ -1,0 +1,6 @@
+*.pyc
+*.json
+*.db
+*.npy
+*.dat
+Excersice Sheet 01/output/vel_verlet.dat
