@@ -24,7 +24,7 @@ boundary_conditions = "periodic"
 
 
 # data structure etc.
-## Dictionary mapping property names to their indices in the data array
+## Dictionary mapping property names to their indices in the data array; possible properties: pID, type, x, y, z, vx, vy, vz, fx, fy, fz, mass, radius, cluster_id, charge
 properties = {
     "pID": 0,
     "type": 1,
@@ -39,8 +39,6 @@ properties = {
     "fz": 10,
     "mass": 11,
     "radius": 12,
-    "cluster_id": 13,
-    "charge": 14,
 }
 ## Name of the output/input file
 filename = "file.dat"

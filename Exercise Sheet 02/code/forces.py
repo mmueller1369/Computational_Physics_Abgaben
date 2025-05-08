@@ -20,10 +20,10 @@ def force_matrix(
     Returns:
         numpy.ndarray: The force matrix; shape (particles, particles, 3).
     """
-    if potential == "lj":
-        potential_func = lj_force
-    if potential == "gravitational":
-        potential_func = gravitational_force
+    try:
+        potential_func = globals()[f"{potential}_force"]
+    except KeyError:
+        raise ValueError(f"Unknown potential: {potential}")
 
     force_matrix = np.zeros((config.shape[1], config.shape[1], 3))
     for i in range(config.shape[1]):

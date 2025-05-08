@@ -50,8 +50,10 @@ def md_simulation(
     data = np.zeros((dt_max, len(properties), nparticles))
     data[0] = initial_configuration
     # choose the integrator function based on the input parameter
-    if integrator == "velocity_verlet":
-        integrator_func = velocity_verlet
+    try:
+        integrator_func = globals()[f"{integrator}"]
+    except KeyError:
+        raise ValueError(f"Unknown integrator: {integrator}")
     # update positions and velocities based on the chosen integrator for each time step; written in a seemingly strange way to avoid too many if statements
     print(f"Starting simulation with {integrator} integrator for {dt_max} steps.")
     if boundary_conditions == "none" and thermostat == "none":
