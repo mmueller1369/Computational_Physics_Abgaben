@@ -7,8 +7,10 @@ dt = 1
 dt_max = 100
 ## Integrator algorithm used in the simulation; options: "velocity_verlet", "verlet", "euler"
 integrator = "velocity_verlet"
-## Potential used in the simulation; options: "lj", "gravitational"
+## Potential model used in the simulation; options: "lj", "gravitational"
 potential = "lj"
+## Parameters for the potential model; lj: epsilon and sigma, gravitational: G; type: list for lj, float for gravitational
+potential_params = [1, 1]
 ## Thermostat used in the simulation; options: "none", "berendsen", "nose-hoover"
 thermostat = "none"
 ## Temperature of the system in the units of the simulation
@@ -17,7 +19,7 @@ T = 1
 dt_thermostat = 1
 ## Simulation box bounds
 box_bounds = ((0, 10), (0, 10), (0, 10))
-## Boundary conditions; options: "periodic", "reflective", "open"
+## Boundary conditions; options: "periodic", "reflective", "none"
 boundary_conditions = "periodic"
 
 

@@ -1,8 +1,11 @@
 import numpy as np
 import params
 import tqdm
+from integrators import velocity_verlet
+from typing import Union
 
-# TODO: Write integrator, potential, thermostat and reboxing functions
+# TODO: Write integrators euler and verlet, thermostat and reboxing functions
+# for save
 # filename: str = params.filename,
 # path: str = params.path,
 # selected_properties: list = True,
@@ -13,6 +16,7 @@ def md_simulation(
     initial_configuration: np.ndarray,
     properties: dict = params.properties,
     potential: str = params.potential,
+    potential_params: Union[tuple, float] = params.potential_params,
     integrator: str = params.integrator,
     dt: int = params.dt,
     dt_max: int = params.dt_max,
@@ -26,15 +30,17 @@ def md_simulation(
 
     Parameters:
         initial_configuration (numpy.ndarray): The initial configuration of the system featuring the defined properties; format: (properties, particles).
-        properties (dict): The featured properties of the particles. Originally taken from params.
-        potential (str): The potential model to use. Originally taken from params. Options: "lj", "gravitational".
-        integrator (str): The integrator to use. Originally taken from params. Options: "velocity_verlet", "verlet", "euler".
-        dt (int): The time step for the simulation. Originally taken from params.
-        dt_max (int): The maximum time step for the simulation. Originally taken from params.
-        box_bounds (tuple): The bounds of the simulation box. Originally taken from params.
-        boundary_conditions (str): The boundary conditions to use. Originally taken from params. Options: "periodic", "reflective", "open".
-        thermostat (str): The thermostat to use. Originally taken from params. Options: "none", "berendsen", "nose-hoover".
-        T (float): The temperature of the system. Originally taken from params.
+    Originally taken from params:
+        properties (dict): The featured properties of the particles.
+        potential (str): The potential model to use. Options: "lj", "gravitational".
+        potential_params (Union[tuple, float]): The parameters for the potential model; lj: epsilon and sigma (tuple), gravitational: G (float).
+        integrator (str): The integrator to use. Options: "velocity_verlet", "verlet", "euler".
+        dt (int): The time step for the simulation.
+        dt_max (int): The maximum time step for the simulation.
+        box_bounds (tuple): The bounds of the simulation box.
+        boundary_conditions (str): The boundary conditions to use. Options: "periodic", "reflective", "none".
+        thermostat (str): The thermostat to use. Options: "none", "berendsen", "nose-hoover".
+        T (float): The temperature of the system.
 
     Returns:
         numpy.ndarray: The data of all configurations in the format (timestep, property, particle) (i.e. shape = (dt_max, len(properties), nparticles)).
@@ -46,10 +52,18 @@ def md_simulation(
     # choose the integrator function based on the input parameter
     if integrator == "velocity_verlet":
         integrator_func = velocity_verlet
-    # update positions and velocities based on the chosen integrator for each time step
+    # update positions and velocities based on the chosen integrator for each time step; written in a seemingly strange way to avoid too many if statements
     print(f"Starting simulation with {integrator} integrator for {dt_max} steps.")
-    for t in tqdm(range(1, dt_max)):
-        data[t] = integrator_func(data[t - 1], ...)
-        # TODO: Implement reboxing and thermostat functions here
+    if boundary_conditions == "none" and thermostat == "none":
+        for t in tqdm(range(1, dt_max)):
+            data[t] = integrator_func(data, t, dt, potential, potential_params)
+        # TODO: Implement arguments, reboxing and thermostat functions here
+    elif boundary_conditions != "none" and thermostat == "none":
+        ...
+    elif boundary_conditions == "none" and thermostat != "none":
+        ...
+    else:
+        ...
+
     print("Simulation completed.")
     return data

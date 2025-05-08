@@ -17,9 +17,10 @@ def export_data(
     Parameters:
         data (numpy.ndarray): The data to export, shape (timesteps, properties, particles).
         selected_properties (list): The list of properties to include in the output. If True, all properties from params.properties are included.
-        dt_export (int): Only export data every dt_export steps. Originally taken from params.
-        filename (str): The name of the output file. Originally taken from params.
-        box_bounds (tuple): The bounds of the simulation box. Originally taken from params.
+    Originally taken from params:
+        dt_export (int): Only export data every dt_export steps.
+        filename (str): The name of the output file.
+        box_bounds (tuple): The bounds of the simulation box.
         path (str): The directory where the file will be saved. If None, the current directory is used.
 
     Returns:
@@ -64,12 +65,13 @@ def export_data(
     print(f"Data successfully written to '{filename}'.")
 
 
-def import_data(filename: str, path: str = None) -> tuple:
+def import_data(filename: str, path: str = params.path) -> tuple:
     """
     Import data from a file in LAMMPS dump format.
 
     Parameters:
         filename (str): The name of the input file.
+    Originally taken from params:
         path (str): The directory where the file is located. If None, the current directory is used.
 
     Returns:
