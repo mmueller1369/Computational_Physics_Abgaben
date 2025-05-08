@@ -28,8 +28,8 @@ def force_matrix(
     force_matrix = np.zeros((config.shape[1], config.shape[1], 3))
     for i in range(config.shape[1]):
         for j in range(i + 1, config.shape[1]):
-            prop1 = config[i]
-            prop2 = config[j]
+            prop1 = config[:, i]
+            prop2 = config[:, j]
             force = potential_func(prop1, prop2, potential_params)
             force_matrix[i, j] = force
             force_matrix[j, i] = -force  # Use symmetry of the force matrix
@@ -65,7 +65,7 @@ def lj_force(
         * ((12 * sigma**12 / r_abs**13) - (6 * sigma**6 / r_abs**7))
         * (r / r_abs)
     )
-    return f
+    return f.flatten()
 
 
 def gravitational_force(
@@ -91,7 +91,7 @@ def gravitational_force(
     r_abs = np.linalg.norm(r)
     G = potential_params
     f = G * m1 * m2 / r_abs**2 * (r / r_abs)
-    return f
+    return f.flatten()
 
 
 # Corresponding potential functions

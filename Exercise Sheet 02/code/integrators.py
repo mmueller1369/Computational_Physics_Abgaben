@@ -42,7 +42,7 @@ def velocity_verlet(
     )
     # Update forces and hereby velocities
     new_force_matrix = force_matrix(updated_configuration, potential, potential_params)
-    new_forces = np.sum(new_force_matrix, axis=0)
+    new_forces = np.sum(new_force_matrix, axis=1).T
     new_velocities = velocities + 0.5 * (forces + new_forces) * dt / masses
 
     # Create new configuration

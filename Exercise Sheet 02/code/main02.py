@@ -114,15 +114,14 @@ initial_configuration = np.array(
             9.3930e-9,
         ],  # mass
         [0.2] * 11,  # radius
-    ]
+    ],
+    dtype=object,
 )
-
-print(initial_configuration[params.properties["type"], 0])
 
 data = md_simulation(
     initial_configuration,
     potential="gravitational",
-    potential_params=9.81,
+    potential_params=1.488136e-5,
     dt_max=1000,
     dt=0.5,
     integrator="velocity_verlet",

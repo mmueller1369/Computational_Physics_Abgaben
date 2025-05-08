@@ -1,6 +1,6 @@
 import numpy as np
 import params
-import tqdm
+from tqdm import tqdm
 from integrators import velocity_verlet
 from typing import Union
 
@@ -47,7 +47,7 @@ def md_simulation(
     """
     # initialize the data array to store the simulation results
     nparticles = initial_configuration.shape[1]
-    data = np.zeros((dt_max, len(properties), nparticles))
+    data = np.zeros((dt_max, len(properties), nparticles), dtype=object)
     data[0] = initial_configuration
     # choose the integrator function based on the input parameter
     try:
