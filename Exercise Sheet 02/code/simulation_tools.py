@@ -4,13 +4,6 @@ from tqdm import tqdm
 from integrators import velocity_verlet
 from typing import Union
 
-# TODO: Write integrators euler and verlet, thermostat and reboxing functions
-# for save
-# filename: str = params.filename,
-# path: str = params.path,
-# selected_properties: list = True,
-# dt_export: int = params.dt_export,
-
 
 def md_simulation(
     initial_configuration: np.ndarray,
@@ -60,19 +53,42 @@ def md_simulation(
     print(f"Starting simulation with {integrator} integrator for {dt_max} steps.")
     if boundary_conditions == "none" and thermostat == "none":
         for t in tqdm(range(1, dt_max)):
-            data[t] = integrator_func(data, t, dt, potential, potential_params)
-        # TODO: Implement arguments, reboxing and thermostat functions here
+            data[t] = integrator_func(
+                data,
+                t,
+                dt,
+                potential,
+                potential_params,
+                box_bounds,
+                boundary_conditions,
+            )
     elif boundary_conditions != "none" and thermostat == "none":
         boundary_conditions_func = globals()[
             f"{boundary_conditions}_boundary_conditions"
         ]
         for t in tqdm(range(1, dt_max)):
-            data[t] = integrator_func(data, t, dt, potential, potential_params)
+            data[t] = integrator_func(
+                data,
+                t,
+                dt,
+                potential,
+                potential_params,
+                box_bounds,
+                boundary_conditions,
+            )
             data[t] = boundary_conditions_func(data, box_bounds, t)
     elif boundary_conditions == "none" and thermostat != "none":
         thermostat_func = globals()[f"{thermostat}_thermostat"]
         for t in tqdm(range(1, dt_max)):
-            data[t] = integrator_func(data, t, dt, potential, potential_params)
+            data[t] = integrator_func(
+                data,
+                t,
+                dt,
+                potential,
+                potential_params,
+                box_bounds,
+                boundary_conditions,
+            )
             data[t] = thermostat_func(data, t, dt_thermostat, T)
     else:
         boundary_conditions_func = globals()[

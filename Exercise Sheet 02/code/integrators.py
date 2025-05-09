@@ -10,6 +10,8 @@ def velocity_verlet(
     dt: float,
     potential: str,
     potential_params: Union[tuple, float],
+    box_bounds: tuple,
+    boundary_conditions: str,
 ) -> np.ndarray:
     """
     Velocity Verlet integrator.
@@ -20,6 +22,8 @@ def velocity_verlet(
         dt (float): The time step for the simulation.
         potential (str): The potential model to use. Options: "lj", "gravitational".
         potential_params (list): The parameters for the potential model; lj: epsilon and sigma (tuple), gravitational: G (float).
+        box_bounds (tuple): The bounds of the simulation box. Needed for measuring the particle distances.
+        boundary_conditions (str): The type of boundary conditions to apply. Options: "periodic", "reflective", "none".
 
     Returns:
         numpy.ndarray: The updated configuration after one time step.
@@ -39,7 +43,13 @@ def velocity_verlet(
         new_positions
     )
     # Update forces and hereby velocities
-    new_force_matrix = force_matrix(updated_configuration, potential, potential_params)
+    new_force_matrix = force_matrix(
+        updated_configuration,
+        potential,
+        potential_params,
+        box_bounds,
+        boundary_conditions,
+    )
     new_forces = np.sum(new_force_matrix, axis=1).T
     new_velocities = velocities + 0.5 * (forces + new_forces) * dt / masses
 
