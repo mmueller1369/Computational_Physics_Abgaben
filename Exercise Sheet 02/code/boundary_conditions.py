@@ -1,4 +1,5 @@
 import numpy as np
+import params
 
 
 def periodic_boundary_conditions(
@@ -17,16 +18,19 @@ def periodic_boundary_conditions(
     """
     configuration = data[timestep]
 
-    for dim in range(3):
-        lower_bound, upper_bound = box_bounds[dim]
+    for i, direction in enumerate(["x", "y", "z"]):
+        index = params.properties[direction]
+        lower_bound, upper_bound = box_bounds[i]
         length = upper_bound - lower_bound
-        configuration[dim] = np.where(
-            configuration[dim] < lower_bound,
-            configuration[dim] + length * np.floor(configuration[dim] / length),
+        configuration[index, :] = np.where(
+            configuration[index, :] < lower_bound,
+            configuration[index, :]
+            - length * np.floor(configuration[index, :] / length),
             np.where(
-                configuration[dim] > upper_bound,
-                configuration[dim] - length * np.floor(configuration[dim] / length),
-                configuration[dim],
+                configuration[index, :] > upper_bound,
+                configuration[index, :]
+                - length * np.floor(configuration[index, :] / length),
+                configuration[index, :],
             ),
         )
 

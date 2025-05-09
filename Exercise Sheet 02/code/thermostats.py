@@ -30,7 +30,7 @@ def velocity_rescaling_thermostat(
         ]
         masses = configuration[params.properties["mass"], :]
         kinetic_energy = 0.5 * np.sum(masses * np.sum(velocities**2, axis=0))
-        current_temperature = (2 * kinetic_energy) / (3 * nparticles * params.k_B)
+        current_temperature = (2 * kinetic_energy) / (3 * nparticles * params.kB)
 
         # Calculate the scaling factor
         scaling_factor = np.sqrt(T / current_temperature)

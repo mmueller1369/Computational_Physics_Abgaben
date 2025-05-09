@@ -26,13 +26,6 @@ box_bounds = ((0, 10), (0, 10), (0, 10))
 initial_configuration = lj_system_initial_configuration
 initial_configuration = create_geometry(initial_configuration)
 initial_configuration = assign_random_velocities(initial_configuration)
-export_data(
-    np.array([initial_configuration]),
-    True,
-    dt_export=1,
-    filename="initial_configuration.dat",
-    box_bounds=box_bounds,
-)
 
 for dt in [1, 10, 0.1]:
     filename = f"exercise_e_dt={dt}.dat"
@@ -42,13 +35,21 @@ for dt in [1, 10, 0.1]:
         initial_configuration,
         potential=potential,
         potential_params=potential_params,
-        dt_max=10000,
+        dt_max=1000,
         dt=dt,
         integrator=integrator,
         boundary_conditions=boundary_conditions,
         thermostat="velocity_rescaling",
         T=T,
         dt_thermostat=10,
+    )
+
+    export_data(
+        equilibration_configuration,
+        selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
+        dt_export=1,
+        filename=filename,
+        box_bounds=box_bounds,
     )
 
     ## Production run
