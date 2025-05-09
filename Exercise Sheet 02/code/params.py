@@ -17,6 +17,8 @@ thermostat = "none"
 T = 1
 ## Time step for thermostat updates
 dt_thermostat = 1
+## Boltzmann constant; used for thermostatting; type: float
+kB = 1.380649e-23  # J/K; used for thermostatting
 ## Simulation box bounds
 box_bounds = ((0, 10), (0, 10), (0, 10))
 ## Boundary conditions; options: "periodic", "reflective", "none"
