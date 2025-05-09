@@ -1,23 +1,41 @@
-from simulation_tools import md_simulation
+from simulation import run_simulation
 from data_io import export_data
-import solar_system
 
-initial_configuration = solar_system.solar_system_initial_configuration
+# Initialization
+box_bounds = ((0, 10), (0, 10), (0, 10))
+initial_configuration = ...
 
-data = md_simulation(
+# Equilibration
+equilibration_configuration = run_simulation(
     initial_configuration,
-    potential="gravitational",
-    potential_params=1.488136e-5,
-    dt_max=1000,
-    dt=0.5,
+    potential="lj_cut",
+    potential_params=[0.297741315, 0.188, 2.5],
+    dt_max=10000,
+    dt=1,
     integrator="velocity_verlet",
-    boundary_conditions="none",
+    boundary_conditions="perodic",
+    thermostat="none",
+    T=300,
+    dt_thermostat=10,
+)
+
+# Production run
+equilibrated_configuration = equilibration_configuration[-1]
+data = run_simulation(
+    equilibrated_configuration,
+    potential="lj_cut",
+    potential_params=[0.297741315, 0.188, 2.5],
+    dt_max=20000,
+    dt=1,
+    integrator="velocity_verlet",
+    boundary_conditions="perodic",
+    thermostat="none",
 )
 
 export_data(
     data,
     selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz"],
-    dt_export=10,
+    dt_export=1,
     filename="output.dat",
-    box_bounds=((-10, 10), (-10, 10), (-10, 10)),
+    box_bounds=box_bounds,
 )

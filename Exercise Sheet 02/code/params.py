@@ -18,7 +18,7 @@ T = 1.0
 ## Time step for thermostat updates
 dt_thermostat = 1
 ## Boltzmann constant; used for thermostatting
-kB = 1.0
+kB = 0.0019849421
 ## Simulation box bounds
 box_bounds = ((0, 10), (0, 10), (0, 10))
 ## Boundary conditions; options: "periodic", "reflective", "none"
