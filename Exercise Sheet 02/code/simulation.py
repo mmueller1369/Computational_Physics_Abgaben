@@ -110,5 +110,4 @@ def run_simulation(
             data[t] = boundary_conditions_func(data, box_bounds, t)
             data[t] = thermostat_func(data, t, dt_thermostat, T)
 
-        print("Simulation completed.")
-        return data
+    return data
