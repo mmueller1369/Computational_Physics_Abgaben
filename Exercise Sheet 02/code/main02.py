@@ -1,5 +1,11 @@
+import numpy as np
 from simulation import run_simulation
 from data_io import export_data
+from part_a import (
+    lj_system_initial_configuration,
+    create_geometry,
+    assign_random_velocities,
+)
 
 # Simulations needed for exercise e:
 
@@ -17,7 +23,16 @@ boundary_conditions = "periodic"
 
 ## Initialization
 box_bounds = ((0, 10), (0, 10), (0, 10))
-initial_configuration = ...
+initial_configuration = lj_system_initial_configuration
+initial_configuration = create_geometry(initial_configuration)
+initial_configuration = assign_random_velocities(initial_configuration)
+export_data(
+    np.array([initial_configuration]),
+    True,
+    dt_export=1,
+    filename="initial_configuration.dat",
+    box_bounds=box_bounds,
+)
 
 for dt in [1, 10, 0.1]:
     filename = f"exercise_e_dt={dt}.dat"

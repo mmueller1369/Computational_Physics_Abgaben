@@ -51,4 +51,25 @@ def create_geometry(initial_config: np.ndarray) -> np.ndarray:
     return initial_config
 
 
+def assign_random_velocities(initial_config: np.ndarray) -> np.ndarray:
+    """
+    Assign random velocities to the particles in the initial configuration.
+
+    Args:
+        initial_config (np.ndarray): The initial configuration of the particles.
+
+    Returns:
+        np.ndarray: The initial configuration with assigned random velocities.
+    """
+    # Assign random velocities
+    for i in range(len(initial_config[0])):
+        initial_config[5][i] = np.random.uniform(-1, 1)  # x velocity
+        initial_config[6][i] = np.random.uniform(-1, 1)  # y velocity
+    # substract the average velocity
+    initial_config[5] -= np.mean(initial_config[5])
+    initial_config[6] -= np.mean(initial_config[6])
+
+    return initial_config
+
+
 print("done")
