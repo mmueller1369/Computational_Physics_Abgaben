@@ -21,7 +21,7 @@ lj_system_initial_configuration = np.array(
         np.zeros(params.nparticles**2),  # x force
         np.zeros(params.nparticles**2),  # y force
         np.zeros(params.nparticles**2),  # z force
-        np.ones(params.nparticles**2) * 39.95,  # mass
+        np.ones(params.nparticles**2) * params.mass,  # mass
         np.ones(params.nparticles**2),  # radius
     ],
     dtype=object,
