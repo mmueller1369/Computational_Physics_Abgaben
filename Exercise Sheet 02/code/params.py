@@ -8,17 +8,17 @@ dt_max = 100
 ## Integrator algorithm used in the simulation; options: "velocity_verlet", "verlet", "euler"
 integrator = "velocity_verlet"
 ## Potential model used in the simulation; options: "lj", "gravitational"
-potential = "lj"
-## Parameters for the potential model; lj: epsilon and sigma, gravitational: G; type: list for lj, float for gravitational
-potential_params = [1, 1]
+potential = "lj_cut"
+## Parameters for the potential model; lj: epsilon and sigma, lj_cut: epsilon, sigma and cutoff (in the units of sigma), gravitational: G; type: list for lj, lj_cut, float for gravitational
+potential_params = [1, 1, 2.5]
 ## Thermostat used in the simulation; options: "none", "berendsen", "nose-hoover"
 thermostat = "none"
 ## Temperature of the system in the units of the simulation
-T = 1
+T = 1.0
 ## Time step for thermostat updates
 dt_thermostat = 1
-## Boltzmann constant; used for thermostatting; type: float
-kB = 1.380649e-23  # J/K; used for thermostatting
+## Boltzmann constant; used for thermostatting
+kB = 1.0
 ## Simulation box bounds
 box_bounds = ((0, 10), (0, 10), (0, 10))
 ## Boundary conditions; options: "periodic", "reflective", "none"
