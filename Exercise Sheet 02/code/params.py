@@ -1,6 +1,8 @@
+import os
+
 # Simulation parameters
 ## Number of particles in the simulation
-nparticles = 10
+nparticles = 5
 ## Time step size measured in the units of the simulation
 dt = 1
 ## Amount of time steps executed of the simulation
@@ -45,6 +47,6 @@ properties = {
 ## Name of the output/input file
 filename = "file.dat"
 ## Directory where the file will be saved; if None, current directory is used
-path = None
+path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
 ## Export data every dt_export steps
 dt_export = 1
