@@ -190,32 +190,6 @@ def lj_potential(
     return V
 
 
-def gravitational_potential(
-    prop1: np.ndarray,
-    prop2: np.ndarray,
-    potential_params: tuple,
-    boundary_conditions: str,
-    box_bounds: tuple,
-) -> np.ndarray:
-    """
-    Gravitational potential calculation between two particles.
-
-    Parameters:
-        prop1 (numpy.ndarray): Properties of the first particle.
-        prop2 (numpy.ndarray): Properties of the second particle.
-        potential_params (float): Gravitational constant.
-        boundary_conditions (str): The type of boundary conditions to apply.
-        box_bounds (tuple): The bounds of the simulation box.
-
-    Returns:
-        float: The potential energy between the two particles.
-    """
-    r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
-    m1, m2 = prop1[params.properties["mass"]], prop2[params.properties["mass"]]
-    V = -potential_params * m1 * m2 / r_abs
-    return V
-
-
 def lj_cut_potential(
     prop1: np.ndarray,
     prop2: np.ndarray,
@@ -244,4 +218,30 @@ def lj_cut_potential(
         ) - 4 * epsilon * (cutoff**-12 - cutoff**-6)
     else:
         V = 0
+    return V
+
+
+def gravitational_potential(
+    prop1: np.ndarray,
+    prop2: np.ndarray,
+    potential_params: tuple,
+    boundary_conditions: str,
+    box_bounds: tuple,
+) -> np.ndarray:
+    """
+    Gravitational potential calculation between two particles.
+
+    Parameters:
+        prop1 (numpy.ndarray): Properties of the first particle.
+        prop2 (numpy.ndarray): Properties of the second particle.
+        potential_params (float): Gravitational constant.
+        boundary_conditions (str): The type of boundary conditions to apply.
+        box_bounds (tuple): The bounds of the simulation box.
+
+    Returns:
+        float: The potential energy between the two particles.
+    """
+    r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
+    m1, m2 = prop1[params.properties["mass"]], prop2[params.properties["mass"]]
+    V = -potential_params * m1 * m2 / r_abs
     return V
