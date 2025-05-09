@@ -97,22 +97,18 @@ def run_simulation(
             f"{boundary_conditions}_boundary_conditions"
         ]
         thermostat_func = globals()[f"{thermostat}_thermostat"]
-        try:
-            for t in tqdm(range(1, dt_max)):
-                data[t] = integrator_func(
-                    data,
-                    t,
-                    dt,
-                    potential,
-                    potential_params,
-                    box_bounds,
-                    boundary_conditions,
-                )
-                data[t] = boundary_conditions_func(data, box_bounds, t)
-                data[t] = thermostat_func(data, t, dt_thermostat, T)
+        for t in tqdm(range(1, dt_max)):
+            data[t] = integrator_func(
+                data,
+                t,
+                dt,
+                potential,
+                potential_params,
+                box_bounds,
+                boundary_conditions,
+            )
+            data[t] = boundary_conditions_func(data, box_bounds, t)
+            data[t] = thermostat_func(data, t, dt_thermostat, T)
 
-            print("Simulation completed.")
-            return data
-        except ZeroDivisionError as e:
-            print("Error: Division by zero encountered in the simulation.")
-            return data
+        print("Simulation completed.")
+        return data
