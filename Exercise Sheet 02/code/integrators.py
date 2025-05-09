@@ -3,8 +3,6 @@ import params
 from forces import force_matrix
 from typing import Union
 
-# TODO: new_forces (currently ll 32) might be wrong, might be axis = 1
-
 
 def velocity_verlet(
     data: np.ndarray,
