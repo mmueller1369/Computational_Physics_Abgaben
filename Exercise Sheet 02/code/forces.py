@@ -102,6 +102,40 @@ def lj_force(
     return f.flatten()
 
 
+def lj_cut_force(
+    prop1: np.ndarray,
+    prop2: np.ndarray,
+    potential_params: tuple,
+    boundary_conditions: str,
+    box_bounds: tuple,
+) -> np.ndarray:
+    """
+    Lennard-Jones potential force calculation with cutoff between two particles.
+
+    Parameters:
+        prop1 (numpy.ndarray): Properties of the first particle.
+        prop2 (numpy.ndarray): Properties of the second particle.
+        potential_params (tuple): Parameters for the Lennard-Jones potential; epsilon, sigma and cutoff.
+        boundary_conditions (str): The type of boundary conditions to apply.
+        box_bounds (tuple): The bounds of the simulation box.
+
+    Returns:
+        numpy.ndarray: The force vector between the two particles.
+    """
+    r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
+    epsilon, sigma, cutoff = potential_params
+    if r_abs < cutoff:
+        f = (
+            4
+            * epsilon
+            * ((12 * sigma**12 / r_abs**13) - (6 * sigma**6 / r_abs**7))
+            * (r / r_abs)
+        )
+    else:
+        f = np.zeros(3)
+    return f.flatten()
+
+
 def gravitational_force(
     prop1: np.ndarray,
     prop2: np.ndarray,
@@ -153,6 +187,37 @@ def lj_potential(
     r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
     epsilon, sigma = potential_params
     V = 4 * epsilon * ((sigma / r_abs) ** 12 - (sigma / r_abs) ** 6)
+    return V
+
+
+def lj_cut_potential(
+    prop1: np.ndarray,
+    prop2: np.ndarray,
+    potential_params: tuple,
+    boundary_conditions: str,
+    box_bounds: tuple,
+) -> np.ndarray:
+    """
+    Lennard-Jones potential calculation with cutoff between two particles.
+
+    Parameters:
+        prop1 (numpy.ndarray): Properties of the first particle.
+        prop2 (numpy.ndarray): Properties of the second particle.
+        potential_params (tuple): Parameters for the Lennard-Jones potential; epsilon, sigma and cutoff.
+        boundary_conditions (str): The type of boundary conditions to apply.
+        box_bounds (tuple): The bounds of the simulation box.
+
+    Returns:
+        float: The potential energy between the two particles.
+    """
+    r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
+    epsilon, sigma, cutoff = potential_params
+    if r_abs < cutoff:
+        V = 4 * epsilon * (
+            (sigma / r_abs) ** 12 - (sigma / r_abs) ** 6
+        ) - 4 * epsilon * (cutoff**-12 - cutoff**-6)
+    else:
+        V = 0
     return V
 
 

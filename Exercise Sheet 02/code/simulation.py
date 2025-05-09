@@ -3,9 +3,11 @@ import params
 from tqdm import tqdm
 from integrators import velocity_verlet
 from typing import Union
+from thermostats import velocity_rescaling_thermostat
+from boundary_conditions import periodic_boundary_conditions
 
 
-def md_simulation(
+def run_simulation(
     initial_configuration: np.ndarray,
     properties: dict = params.properties,
     potential: str = params.potential,
@@ -102,76 +104,3 @@ def md_simulation(
 
     print("Simulation completed.")
     return data
-
-
-def periodic_boundary_conditions(
-    data: np.ndarray, box_bounds: tuple, timestep: int
-) -> np.ndarray:
-    """
-    Apply periodic boundary conditions to the simulation data.
-
-    Parameters:
-        data (numpy.ndarray): The simulation data.
-        box_bounds (tuple): The bounds of the simulation box.
-        timestep (int): The current timestep.
-
-    Returns:
-        numpy.ndarray: The updated simulation data with periodic boundary conditions applied.
-    """
-    configuration = data[timestep]
-
-    for dim in range(3):
-        lower_bound, upper_bound = box_bounds[dim]
-        length = upper_bound - lower_bound
-        configuration[dim] = np.where(
-            configuration[dim] < lower_bound,
-            configuration[dim] + length * np.floor(configuration[dim] / length),
-            np.where(
-                configuration[dim] > upper_bound,
-                configuration[dim] - length * np.floor(configuration[dim] / length),
-                configuration[dim],
-            ),
-        )
-
-    return configuration
-
-
-def velocity_rescaling_thermostat(
-    data: np.ndarray,
-    timestep: int,
-    dt_thermostat: int,
-    T: float,
-) -> np.ndarray:
-    """
-    Apply a velocity rescaling thermostat to the simulation data.
-
-    Parameters:
-        data (numpy.ndarray): The simulation data.
-        timestep (int): The current timestep.
-        dt_thermostat (int): The time step for thermostat updates.
-        T (float): The target temperature.
-
-    Returns:
-        numpy.ndarray: The updated simulation data with the thermostat applied.
-    """
-    configuration = data[timestep]
-    nparticles = configuration.shape[1]
-
-    if timestep % dt_thermostat == 0:
-        # Calculate the current temperature
-        velocities = configuration[
-            params.properties["vx"] : params.properties["vz"] + 1, :
-        ]
-        masses = configuration[params.properties["mass"], :]
-        kinetic_energy = 0.5 * np.sum(masses * np.sum(velocities**2, axis=0))
-        current_temperature = (2 * kinetic_energy) / (3 * nparticles * params.k_B)
-
-        # Calculate the scaling factor
-        scaling_factor = np.sqrt(T / current_temperature)
-
-        # Rescale velocities
-        configuration[
-            params.properties["vx"] : params.properties["vz"] + 1, :
-        ] *= scaling_factor
-
-    return configuration
