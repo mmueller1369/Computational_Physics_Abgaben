@@ -6,6 +6,7 @@ from part_a import (
     create_geometry,
     assign_random_velocities,
 )
+import params
 
 # Simulations needed for exercise e:
 
@@ -22,7 +23,7 @@ integrator = "velocity_verlet"
 boundary_conditions = "periodic"
 
 ## Initialization
-box_bounds = ((0, 10), (0, 10), (0, 10))
+box_bounds = params.box_bounds
 initial_configuration = lj_system_initial_configuration
 initial_configuration = create_geometry(initial_configuration)
 initial_configuration = assign_random_velocities(initial_configuration)
@@ -35,7 +36,7 @@ for dt in [1, 10, 0.1]:
         initial_configuration,
         potential=potential,
         potential_params=potential_params,
-        dt_max=1000,
+        dt_max=5000,
         dt=dt,
         integrator=integrator,
         boundary_conditions=boundary_conditions,
@@ -48,7 +49,7 @@ for dt in [1, 10, 0.1]:
         equilibration_configuration,
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
         dt_export=1,
-        filename=filename,
+        filename="equilibration.dat",
         box_bounds=box_bounds,
     )
 

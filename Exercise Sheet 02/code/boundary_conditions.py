@@ -23,15 +23,11 @@ def periodic_boundary_conditions(
         lower_bound, upper_bound = box_bounds[i]
         length = upper_bound - lower_bound
         configuration[index, :] = np.where(
-            configuration[index, :] < lower_bound,
+            (configuration[index, :] < lower_bound)
+            | (configuration[index, :] > upper_bound),
             configuration[index, :]
             - length * np.floor(configuration[index, :] / length),
-            np.where(
-                configuration[index, :] > upper_bound,
-                configuration[index, :]
-                - length * np.floor(configuration[index, :] / length),
-                configuration[index, :],
-            ),
+            configuration[index, :],
         )
 
     return configuration

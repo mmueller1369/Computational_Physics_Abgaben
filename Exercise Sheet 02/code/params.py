@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 # Simulation parameters
 ## Number of particles in the simulation
@@ -22,7 +23,8 @@ dt_thermostat = 1
 ## Boltzmann constant; used for thermostatting
 kB = 0.0019849421
 ## Simulation box bounds
-box_bounds = ((0, 10), (0, 10), (0, 10))
+L = 2 * np.sqrt(nparticles**2 / 0.188)
+box_bounds = ((0, L), (0, L), (0, L))
 ## Boundary conditions; options: "periodic", "reflective", "none"
 boundary_conditions = "periodic"
 
