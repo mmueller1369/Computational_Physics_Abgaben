@@ -65,9 +65,8 @@ def effective_distance(
     r = (r2 - r1).reshape(3, 1)
 
     if boundary_conditions == "periodic":
-        for i in range(3):
-            length = box_bounds[i][1] - box_bounds[i][0]
-            r[i] -= length * int(r[i] / length)
+        box_lengths = np.ones(3) * box_bounds[0][1]
+        r = (r2 - r1 + box_lengths / 2) % box_lengths - box_lengths / 2
     return r, np.linalg.norm(r)
 
 
