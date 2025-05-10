@@ -18,6 +18,8 @@ initial_configuration = lj_system_initial_configuration
 initial_configuration = create_geometry(initial_configuration)
 initial_configuration = assign_random_velocities(initial_configuration)
 
+
+# for dt_scale in [1, 10, 0.1]:
 for dt_scale in [1, 10, 0.1]:
     ## Equilibration
     params.dt_max = 10000
@@ -85,7 +87,7 @@ for cutoff in [3.25, 4.0]:
         dt_export=params.dt_export,
     )
 
-
+"""
 # Simulation needed for exercise i:
 for multiplier in [0.1, 0.5, 1, 5]:
     epsilon = params.kB * params.T * multiplier
@@ -117,11 +119,12 @@ for multiplier in [0.1, 0.5, 1, 5]:
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
         filename=f"exercise_i_multiplier={multiplier}.dat",
     )
-
-
+"""
+"""
 # Simulations needed for exercise f,g:
 params.dt_max = 100
 for nparticles in [10, 20, 30, 40, 50]:
+    print(f"Running simulation for {nparticles} particles")
     params.nparticles = nparticles
     params.box_bounds = ((0, 2 * params.sigma * nparticles),) * 3
     params.potential_params = [params.epsilon, params.sigma, 2.5]
@@ -152,11 +155,12 @@ for nparticles in [10, 20, 30, 40, 50]:
 
     ## Test run to see the needed time
     data = run_simulation(
-        initial_configuration,
+        initial_configuration_modified,
         potential_params=params.potential_params,
         dt=params.dt,
         dt_max=params.dt_max,
         thermostat=params.thermostat,
+        box_bounds=params.box_bounds,
     )
 
     ## Export data
@@ -165,4 +169,6 @@ for nparticles in [10, 20, 30, 40, 50]:
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
         filename=f"exercise_f_nparticles={nparticles}.dat",
         dt_export=1,
+        box_bounds=params.box_bounds,
     )
+"""
