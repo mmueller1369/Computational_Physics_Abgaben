@@ -63,6 +63,7 @@ def effective_distance(
         prop1[params.properties["x"] : params.properties["z"] + 1],
     )
     r = (r2 - r1).reshape(3, 1)
+
     if boundary_conditions == "periodic":
         for i in range(3):
             length = box_bounds[i][1] - box_bounds[i][0]
@@ -93,7 +94,7 @@ def lj_force(
     """
     r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
     epsilon, sigma = potential_params
-    f = (
+    f = -(
         4
         * epsilon
         * ((12 * sigma**12 / r_abs**13) - (6 * sigma**6 / r_abs**7))
@@ -125,7 +126,7 @@ def lj_cut_force(
     r, r_abs = effective_distance(prop1, prop2, box_bounds, boundary_conditions)
     epsilon, sigma, cutoff = potential_params
     if r_abs < cutoff:
-        f = (
+        f = -(
             4
             * epsilon
             * ((12 * sigma**12 / r_abs**13) - (6 * sigma**6 / r_abs**7))

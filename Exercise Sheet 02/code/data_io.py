@@ -10,6 +10,7 @@ def export_data(
     filename: str = params.filename,
     box_bounds: tuple = params.box_bounds,
     path: str = params.path,
+    mode: str = "normal",
 ) -> None:
     """
     Export data to a file in LAMMPS dump format.
@@ -22,6 +23,7 @@ def export_data(
         filename (str): The name of the output file.
         box_bounds (tuple): The bounds of the simulation box.
         path (str): The directory where the file will be saved. If None, the current directory is used.
+        mode (str): The mode of the export. Options: "normal", "debug". In "debug" mode, the function will overwrite existing files without asking for confirmation.
 
     Returns:
         None
@@ -29,7 +31,7 @@ def export_data(
     if path:
         filename = os.path.join(path, filename)
 
-    if os.path.exists(filename):
+    if os.path.exists(filename) and not mode == "debug":
         user_input = input(f"The file '{filename}' already exists. Overwrite? (y/n): ")
         if user_input != "y":
             print("Export cancelled.")

@@ -1,17 +1,23 @@
 import os
-import numpy as np
 
 # Simulation parameters
 ## Number of particles in the simulation
 nparticles = 5
-dt = 1e-15  # in seconds
-dt_max = 5000
-epsilon = 0.297741315 * 4184  # umrechnung in joule/mol
-sigma = 0.188 * 1e-9  # in m
-cutoff = 2.5 * sigma
-kB = 0.0019849421 * 4184  # umrechnung in joule/mol/K
-T = 300
-mass = 39.95 * 1e-3  # in kg
+
+## LJ scaling factors
+epsilon_lj = 0.297741315  # kcal/mol
+sigma_lj = 0.188  # nm
+mass_lj = 39.95  # g/mol
+kB_lj = 0.0019849421  # kcal/mol/K
+## everything rescaled to the LJ scaling factors
+kB = 1
+epsilon = 1
+sigma = 1
+mass = 1
+cutoff = 2.5
+dt = 0.000094  # 1 fs (vmtl um 1e1 zu klein, aber fliegt sonst auseinander)
+dt_max = 10000
+T = 2.0  # 300 K
 potential_params = [epsilon, sigma, cutoff]
 dt_thermostat = 10  # nach schritten updaten
 potential = "lj_cut"
