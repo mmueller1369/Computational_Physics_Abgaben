@@ -2,7 +2,7 @@ import os
 
 # Simulation parameters
 ## Number of particles in the simulation
-nparticles = 5
+nparticles = 20
 
 ## LJ scaling factors
 epsilon_lj = 0.297741315  # kcal/mol
