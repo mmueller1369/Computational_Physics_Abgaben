@@ -39,7 +39,12 @@ def compute_ke(data: np.ndarray, timestep: int) -> float:
 
 
 def compute_pe(
-    data: np.ndarray, timestep: int, potential: str, potential_params: float
+    data: np.ndarray,
+    timestep: int,
+    potential: str,
+    potential_params: float,
+    boundary_conditions: str,
+    box_bounds: tuple,
 ) -> float:
     """
     Compute the potential energy from the given data.
@@ -61,12 +66,19 @@ def compute_pe(
         prop_i = configuration[:, i]
         for j in range(i + 1, nparticles):
             prop_j = configuration[:, j]
-            potential_energy += potential_func(prop_i, prop_j, potential_params)
+            potential_energy += potential_func(
+                prop_i, prop_j, potential_params, boundary_conditions, box_bounds
+            )
     return potential_energy
 
 
 def compute_e(
-    data: np.ndarray, timestep: int, potential: str, potential_params: float
+    data: np.ndarray,
+    timestep: int,
+    potential: str,
+    potential_params: float,
+    boundary_conditions: str,
+    box_bounds: tuple,
 ) -> float:
     """
     Compute the total energy from the given data, using the computes for kinetic and potential energy.
@@ -81,5 +93,7 @@ def compute_e(
         float: The total energy.
     """
     ke = compute_ke(data, timestep)
-    pe = compute_pe(data, timestep, potential, potential_params)
+    pe = compute_pe(
+        data, timestep, potential, potential_params, boundary_conditions, box_bounds
+    )
     return ke + pe

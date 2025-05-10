@@ -2,31 +2,33 @@ import os
 
 # Simulation parameters
 ## Number of particles in the simulation
-nparticles = 5
-## Time step size measured in the units of the simulation
-dt = 1
-## Amount of time steps executed of the simulation
-dt_max = 100
-## Integrator algorithm used in the simulation; options: "velocity_verlet", "verlet", "euler"
-integrator = "velocity_verlet"
-## Potential model used in the simulation; options: "lj", "gravitational"
+nparticles = 20
+
+## LJ scaling factors
+epsilon_lj = 0.297741315  # kcal/mol
+sigma_lj = 0.188  # nm
+mass_lj = 39.95  # g/mol
+kB_lj = 0.0019849421  # kcal/mol/K
+## everything rescaled to the LJ scaling factors
+kB = 1
+epsilon = 1
+sigma = 1
+mass = 1
+cutoff = 2.5
+dt = 0.00094  # 1 fs (vmtl um 1e1 zu klein, aber fliegt sonst auseinander)
+dt_max = 10000
+T = 2.0  # 300 K
+potential_params = [epsilon, sigma, cutoff]
+dt_thermostat = 10  # nach schritten updaten
 potential = "lj_cut"
-## Parameters for the potential model; lj: epsilon and sigma, lj_cut: epsilon, sigma and cutoff (in the units of sigma), gravitational: G; type: list for lj, lj_cut, float for gravitational
-potential_params = [1, 1, 2.5]
-## Thermostat used in the simulation; options: "none", "berendsen", "nose-hoover"
-thermostat = "none"
-## Temperature of the system in the units of the simulation
-T = 1.0
-## Time step for thermostat updates
-dt_thermostat = 1
-## Boltzmann constant; used for thermostatting
-kB = 0.0019849421
-## Simulation box bounds
-box_bounds = ((0, 10), (0, 10), (0, 10))
-## Boundary conditions; options: "periodic", "reflective", "none"
+integrator = "velocity_verlet"
 boundary_conditions = "periodic"
+thermostat = "none"
 
 
+## Simulation box bounds
+L = 2 * sigma * nparticles
+box_bounds = ((0, L), (0, L), (0, L))
 # data structure etc.
 ## Dictionary mapping property names to their indices in the data array; possible properties: pID, type, x, y, z, vx, vy, vz, fx, fy, fz, mass, radius, cluster_id, charge
 properties = {
@@ -44,8 +46,7 @@ properties = {
     "mass": 11,
     "radius": 12,
 }
-## Name of the output/input file
-filename = "file.dat"
+filename = "output.dat"  # standard name for output file
 ## Directory where the file will be saved; if None, current directory is used
 path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
 ## Export data every dt_export steps

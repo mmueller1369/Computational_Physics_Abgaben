@@ -6,62 +6,43 @@ from part_a import (
     create_geometry,
     assign_random_velocities,
 )
+import params
 
 # Simulations needed for exercise e:
-
-## Definition of the parameters
-epsilon = 0.297741315  # kcal/mol
-sigma = 0.188  # nm
-cutoff = 2.5  # in sigma
-mass = 39.95  # g/mol
-kB = 0.0019849421  # kcal/mol/K
-T = 300  # K
-potential = "lj_cut"
-potential_params = [epsilon, sigma, cutoff]
-integrator = "velocity_verlet"
-boundary_conditions = "periodic"
+params.dt_thermostat = 10
+params.thermostat = "velocity_rescaling"
+params.dt_export = 10
 
 ## Initialization
-box_bounds = ((0, 10), (0, 10), (0, 10))
 initial_configuration = lj_system_initial_configuration
 initial_configuration = create_geometry(initial_configuration)
 initial_configuration = assign_random_velocities(initial_configuration)
 
-for dt in [1, 10, 0.1]:
-    filename = f"exercise_e_dt={dt}.dat"
 
+# for dt_scale in [1, 10, 0.1]:
+for dt_scale in [1, 10, 0.1]:
     ## Equilibration
+    params.dt_max = 10000
+    dt = params.dt * dt_scale
+
     equilibration_configuration = run_simulation(
         initial_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=1000,
+        potential_params=params.potential_params,
         dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
-        thermostat="velocity_rescaling",
-        T=T,
-        dt_thermostat=10,
-    )
-
-    export_data(
-        equilibration_configuration,
-        selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
-        dt_export=1,
-        filename=filename,
-        box_bounds=box_bounds,
+        dt_max=params.dt_max,
+        thermostat=params.thermostat,
+        dt_thermostat=params.dt_thermostat,
     )
 
     ## Production run
     equilibrated_configuration = equilibration_configuration[-1]
+    params.dt_max = 20000
+
     data = run_simulation(
         equilibrated_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=20000,
+        potential_params=params.potential_params,
         dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
+        dt_max=params.dt_max,
         thermostat="none",
     )
 
@@ -69,43 +50,32 @@ for dt in [1, 10, 0.1]:
     export_data(
         data,
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
-        dt_export=1,
-        filename=filename,
-        box_bounds=box_bounds,
+        filename=f"exercise_e_dt={dt_scale}.dat",
+        dt_export=params.dt_export,
     )
-
 
 # Simulation needed for exercise h:
-dt = 1
-
+params.dt_max = 10000
 for cutoff in [3.25, 4.0]:
-    potential_params = [epsilon, sigma, cutoff]
-    filename = f"exercise_h_cut={cutoff}.dat"
+    params.potential_params = [params.epsilon, params.sigma, cutoff]
 
     ## Equilibration
     equilibration_configuration = run_simulation(
         initial_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=10000,
-        dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
-        thermostat="velocity_rescaling",
-        T=T,
-        dt_thermostat=10,
+        potential_params=params.potential_params,
+        dt=params.dt,
+        dt_max=params.dt_max,
+        thermostat=params.thermostat,
+        dt_thermostat=params.dt_thermostat,
     )
 
     ## Production run
     equilibrated_configuration = equilibration_configuration[-1]
     data = run_simulation(
         equilibrated_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=10000,
-        dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
+        potential_params=params.potential_params,
+        dt=params.dt,
+        dt_max=params.dt_max,
         thermostat="none",
     )
 
@@ -113,45 +83,33 @@ for cutoff in [3.25, 4.0]:
     export_data(
         data,
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
-        dt_export=1,
-        filename=filename,
-        box_bounds=box_bounds,
+        filename=f"exercise_h_cut={cutoff}.dat",
+        dt_export=params.dt_export,
     )
 
-
+"""
 # Simulation needed for exercise i:
-dt = 1
-cutoff = 2.5
-
 for multiplier in [0.1, 0.5, 1, 5]:
-    epsilon = multiplier * kB * T
-    potential_params = [epsilon, sigma, cutoff]
-    filename = f"exercise_i_multiplier={multiplier}.dat"
+    epsilon = params.kB * params.T * multiplier
+    params.potential_params = [epsilon, params.sigma, 2.5]
 
     ## Equilibration
     equilibration_configuration = run_simulation(
         initial_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=10000,
-        dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
-        thermostat="velocity_rescaling",
-        T=T,
-        dt_thermostat=10,
+        potential_params=params.potential_params,
+        dt=params.dt,
+        dt_max=params.dt_max,
+        thermostat=params.thermostat,
+        dt_thermostat=params.dt_thermostat,
     )
 
     ## Production run
     equilibrated_configuration = equilibration_configuration[-1]
     data = run_simulation(
-        equilibrated_configuration,
-        potential=potential,
-        potential_params=potential_params,
-        dt_max=10000,
-        dt=dt,
-        integrator=integrator,
-        boundary_conditions=boundary_conditions,
+        initial_configuration,
+        potential_params=params.potential_params,
+        dt=params.dt,
+        dt_max=params.dt_max,
         thermostat="none",
     )
 
@@ -159,9 +117,58 @@ for multiplier in [0.1, 0.5, 1, 5]:
     export_data(
         data,
         selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
-        dt_export=1,
-        filename=filename,
-        box_bounds=box_bounds,
+        filename=f"exercise_i_multiplier={multiplier}.dat",
+    )
+"""
+"""
+# Simulations needed for exercise f,g:
+params.dt_max = 100
+for nparticles in [10, 20, 30, 40, 50]:
+    print(f"Running simulation for {nparticles} particles")
+    params.nparticles = nparticles
+    params.box_bounds = ((0, 2 * params.sigma * nparticles),) * 3
+    params.potential_params = [params.epsilon, params.sigma, 2.5]
+
+    initial_configuration_modified = np.array(
+        [
+            range(0, params.nparticles**2, 1),  # Particle ID
+            ["1"] * params.nparticles**2,  # Type
+            np.zeros(params.nparticles**2),  # x position
+            np.zeros(params.nparticles**2),  # y position
+            np.zeros(params.nparticles**2),  # z position
+            np.zeros(params.nparticles**2),  # x velocity
+            np.zeros(params.nparticles**2),  # y velocity
+            np.zeros(params.nparticles**2),  # z velocity
+            np.zeros(params.nparticles**2),  # x force
+            np.zeros(params.nparticles**2),  # y force
+            np.zeros(params.nparticles**2),  # z force
+            np.ones(params.nparticles**2) * params.mass,  # mass
+            np.ones(params.nparticles**2),  # radius
+        ],
+        dtype=object,
     )
 
-# fg
+    initial_configuration_modified = create_geometry(initial_configuration_modified)
+    initial_configuration_modified = assign_random_velocities(
+        initial_configuration_modified
+    )
+
+    ## Test run to see the needed time
+    data = run_simulation(
+        initial_configuration_modified,
+        potential_params=params.potential_params,
+        dt=params.dt,
+        dt_max=params.dt_max,
+        thermostat=params.thermostat,
+        box_bounds=params.box_bounds,
+    )
+
+    ## Export data
+    export_data(
+        data,
+        selected_properties=["pID", "type", "x", "y", "z", "vx", "vy", "vz", "mass"],
+        filename=f"exercise_f_nparticles={nparticles}.dat",
+        dt_export=1,
+        box_bounds=params.box_bounds,
+    )
+"""

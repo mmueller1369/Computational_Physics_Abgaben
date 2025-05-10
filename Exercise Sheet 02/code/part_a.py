@@ -21,7 +21,7 @@ lj_system_initial_configuration = np.array(
         np.zeros(params.nparticles**2),  # x force
         np.zeros(params.nparticles**2),  # y force
         np.zeros(params.nparticles**2),  # z force
-        np.ones(params.nparticles**2) * 39.95,  # mass
+        np.ones(params.nparticles**2) * params.mass,  # mass
         np.ones(params.nparticles**2),  # radius
     ],
     dtype=object,
@@ -46,7 +46,7 @@ def create_geometry(initial_config: np.ndarray) -> np.ndarray:
         initial_config[3][i] = (i // params.nparticles) * alat + alat / 2  # y position
 
     # change radius of the particles
-    initial_config[12] = np.ones(params.nparticles**2) * alat / 2 * 0.2
+    initial_config[12] = np.ones(params.nparticles**2) * params.sigma / 2
 
     return initial_config
 
@@ -70,6 +70,3 @@ def assign_random_velocities(initial_config: np.ndarray) -> np.ndarray:
     initial_config[6] -= np.mean(initial_config[6])
 
     return initial_config
-
-
-print("done")
