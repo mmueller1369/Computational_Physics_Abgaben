@@ -156,7 +156,7 @@ for nparticles in [10, 20, 30, 40, 50]:
         potential_params=params.potential_params,
         dt=params.dt,
         dt_max=params.dt_max,
-        thermostat="none",
+        thermostat=params.thermostat,
     )
 
     ## Export data

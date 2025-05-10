@@ -2,6 +2,7 @@ from data_io import import_data
 from tools import compute_ke, compute_pe
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy.optimize import curve_fit
 
 # exercise e
 for dt in [1, 10, 0.1]:
@@ -45,6 +46,50 @@ for dt in [1, 10, 0.1]:
         r"$\sum_i{v_{\alpha,i}^2}$ [$\text{nm}^2$/$\text{fs}^2$]$; might be wrong, recheck"
     )
     plt.legend()
+
+
+# exercise f
+N = np.array([10, 20, 30, 40, 50]) ** 2
+t_N = np.array([1, 2, 4, 8, 16])  # to be changed
+
+
+# make the fit
+def power_law(N, alpha, c):
+    return c * N**alpha
+
+
+popt, pcov = curve_fit(power_law, N, t_N)
+alpha, c = popt
+print(f"Fitted alpha: {alpha}")
+# plot the fit
+N_fit = np.linspace(min(N), max(N), 100)
+t_N_fit = power_law(N_fit, alpha, c)
+plt.figure()
+plt.plot(N, t_N, "o", label="Data")
+plt.plot(N_fit, t_N_fit, "-", label=f"Fit: $t_N \propto N^{{{alpha:.2f}}}$")
+plt.xlabel("N")
+plt.ylabel("t_N")
+plt.legend()
+plt.show()
+
+
+# exercise g
+filename_g = "exercise_f_nparticles=20.dat"
+data_g, properties_g, box_bounds_g = import_data(filename_g)
+# Compute v^2 = vx^2 + vy^2 for all particles and time steps and flatten the array; neglect the first 10 time steps as the thermostat didn't act yet
+vx = data_g[10:, properties_g["vx"], :]
+vy = data_g[10:, properties_g["vy"], :]
+v_squared = vx**2 + vy**2
+v_squared_flat = v_squared.flatten()
+# Create a histogram to estimate the distribution P(v^2)
+hist, bin_edges = np.histogram(v_squared_flat, bins=50, density=True)
+bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
+plt.figure()
+plt.plot(bin_centers, hist, label=r"$P(v^2)$")
+plt.xlabel(r"$v^2$ [$\text{nm}^2/\text{fs}^2$]")
+plt.ylabel(r"$P(v^2)$")
+plt.legend()
+plt.show()
 
 
 # exercise h
