@@ -6,12 +6,14 @@ from scipy.optimize import curve_fit
 import params
 import os
 
-"""
+
 # exercise e
 for dt in [1, 10, 0.1]:
     filename = f"exercise_e_dt={dt}.dat"
     data, properties, box_bounds = import_data(filename)
-    multiplier = 10
+    multiplier = (
+        10  # otherwise the computation takes very long, so we skip some data points
+    )
     time = np.arange(
         0, data.shape[0] * dt * params.dt_export, dt * multiplier * params.dt_export
     )
@@ -36,13 +38,12 @@ for dt in [1, 10, 0.1]:
     np.save(os.path.join(params.path, f"exercise_e_pe_dt={dt}.npy"), pe)
     e = ke + pe
     np.save(os.path.join(params.path, f"exercise_e_e_dt={dt}.npy"), e)
-    print(e.shape, time.shape)
 
     plt.plot(time, ke, label="Kinetic Energy")
     plt.plot(time, pe, label="Potential Energy")
     plt.plot(time, e, label="Total Energy")
-    plt.xlabel("Time [fs]")
-    plt.ylabel("Energy [kcal/mol]; might be wrong, recheck")
+    plt.xlabel(r"Time [$\tau$]")
+    plt.ylabel(r"Energy [$\epsilon$]")
     plt.legend()
     plt.semilogy()
     plt.savefig(os.path.join(params.path, f"exercise_e_e_dt={dt}.png"))
@@ -54,6 +55,14 @@ for dt in [1, 10, 0.1]:
     ke_var = np.var(ke)
     pe_var = np.var(pe)
     e_var = np.var(e)
+    ke_std = np.std(ke)
+    pe_std = np.std(pe)
+    e_std = np.std(e)
+
+    print(f"dt={dt}:")
+    print(f"  KE - Mean: {ke_mean}, Std Dev: {ke_std}, Variance: {ke_var}")
+    print(f"  PE - Mean: {pe_mean}, Std Dev: {pe_std}, Variance: {pe_var}")
+    print(f"  E  - Mean: {e_mean}, Std Dev: {e_std}, Variance: {e_var}")
 
     vx = data[:: (multiplier * params.dt_export), properties["vx"], :]
     vy = data[:: (multiplier * params.dt_export), properties["vy"], :]
@@ -64,13 +73,12 @@ for dt in [1, 10, 0.1]:
 
     plt.plot(time, vx_sq_sum, label=r"$\sum_i{v_{x,i}^2}$")
     plt.plot(time, vy_sq_sum, label=r"$\sum_i{v_{y,i}^2}$")
-    plt.xlabel("Time [fs]")
-    plt.ylabel(
-        r"$\sum_i{v_{\alpha,i}^2}$ [$\text{nm}^2$/$\text{fs}^2$]$; might be wrong, recheck"
-    )
+    plt.xlabel(r"Time [$\tau$]")
+    plt.ylabel(r"$\sum_i{v_{\alpha,i}^2}$ [$\sigma/\tau^2$]$")
     plt.legend()
     plt.savefig(os.path.join(params.path, f"exercise_e_v_dt={dt}.png"))
-"""
+    plt.close()
+
 
 # exercise f
 N = np.array([10, 20, 30, 40, 50]) ** 2
@@ -84,15 +92,18 @@ def power_law(N, alpha, c):
 
 popt, pcov = curve_fit(power_law, N, t_N)
 alpha, c = popt
-print(f"Fitted alpha: {alpha}")
+print(f"Fitted alpha: {alpha}, fitted c: {c}")
+print(
+    f"Time for 1000 iterations for n=1000: {power_law(1000**2, alpha, c)*1000/3600/24/365} years"
+)
 # plot the fit
 N_fit = np.linspace(min(N), max(N), 100)
 t_N_fit = power_law(N_fit, alpha, c)
 plt.figure()
 plt.plot(N, t_N, "o", label="Data")
 plt.plot(N_fit, t_N_fit, "-", label=f"Fit: $t_N \propto N^{{{alpha:.2f}}}$")
-plt.xlabel("N")
-plt.ylabel("t_N")
+plt.xlabel(r"$N$")
+plt.ylabel(r"$t_N$")
 plt.legend()
 plt.loglog()
 plt.savefig(os.path.join(params.path, "exercise_f_fit.png"))
@@ -120,36 +131,48 @@ plt.bar(
     align="center",
     label=r"$P(v^2)$",
 )
-plt.xlabel(r"$v^2$ [$\text{nm}^2/\text{fs}^2$]")
+
+plt.xlabel(r"$\sum_i{v_{i}^2}$ [$\sigma/\tau^2$]")
 plt.ylabel(r"$P(v^2)$")
 plt.legend()
 plt.savefig(os.path.join(params.path, "exercise_g_hist.png"))
 plt.close()
 
-"""
+
 # exercise h
 for cutoff in [3.25, 4.0]:
-    filename = f"exercise_h_cutoff={cutoff}.dat"
+    filename = f"exercise_h_cut={cutoff}.dat"
     data, properties, box_bounds = import_data(filename)
-    time = data.shape[0] * 1
-    ke = np.array([compute_ke(data, t) for t in range(data.shape[0])])
+    multiplier = 10  # otherwise the computation takes very long
+    time = np.arange(0, data.shape[0] * params.dt_export, params.dt_export * multiplier)
+    np.save(os.path.join(params.path, f"exercise_h_time_cut={cutoff}.npy"), time)
+    ke = np.array(
+        [compute_ke(data, t * multiplier) for t in range(data.shape[0] // multiplier)]
+    )
+    np.save(os.path.join(params.path, f"exercise_h_ke_cut={cutoff}.npy"), ke)
     pe = np.array(
         [
             compute_pe(
                 data,
-                t,
+                t * multiplier,
                 potential="lj_cut",
-                potential_params=[0.297741315, 0.188, cutoff],
+                potential_params=[0.297741315, 0.188, 2.5],
+                boundary_conditions=params.boundary_conditions,
+                box_bounds=params.box_bounds,
             )
-            for t in range(data.shape[0])
+            for t in range(data.shape[0] // multiplier)
         ]
     )
+    np.save(os.path.join(params.path, f"exercise_h_pe_cut={cutoff}.npy"), pe)
     e = ke + pe
+    np.save(os.path.join(params.path, f"exercise_h_e_cut={cutoff}.npy"), e)
 
     plt.plot(time, ke, label="Kinetic Energy")
     plt.plot(time, pe, label="Potential Energy")
     plt.plot(time, e, label="Total Energy")
-    plt.xlabel("Time [fs]")
-    plt.ylabel("Energy [kcal/mol]; might be wrong, recheck")
+    plt.xlabel(r"Time [$\tau$]")
+    plt.ylabel(r"Energy [$\epsilon$]")
     plt.legend()
-"""
+    plt.semilogy()
+    plt.savefig(os.path.join(params.path, f"exercise_h_e_cut={cutoff}.png"))
+    plt.close()

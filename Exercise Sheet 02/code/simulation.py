@@ -5,6 +5,7 @@ from integrators import velocity_verlet
 from typing import Union
 from thermostats import velocity_rescaling_thermostat
 from boundary_conditions import periodic_boundary_conditions
+from numba import prange
 
 
 def run_simulation(
@@ -54,7 +55,7 @@ def run_simulation(
     # update positions and velocities based on the chosen integrator for each time step; written in a seemingly strange way to avoid too many if statements
     print(f"Starting simulation with {integrator} integrator for {dt_max} steps.")
     if boundary_conditions == "none" and thermostat == "none":
-        for t in tqdm(range(1, dt_max)):
+        for t in tqdm(prange(1, dt_max)):
             data[t] = integrator_func(
                 data,
                 t,
@@ -68,7 +69,7 @@ def run_simulation(
         boundary_conditions_func = globals()[
             f"{boundary_conditions}_boundary_conditions"
         ]
-        for t in tqdm(range(1, dt_max)):
+        for t in tqdm(prange(1, dt_max)):
             data[t] = integrator_func(
                 data,
                 t,
@@ -81,7 +82,7 @@ def run_simulation(
             data[t] = boundary_conditions_func(data, box_bounds, t)
     elif boundary_conditions == "none" and thermostat != "none":
         thermostat_func = globals()[f"{thermostat}_thermostat"]
-        for t in tqdm(range(1, dt_max)):
+        for t in tqdm(prange(1, dt_max)):
             data[t] = integrator_func(
                 data,
                 t,
@@ -97,7 +98,7 @@ def run_simulation(
             f"{boundary_conditions}_boundary_conditions"
         ]
         thermostat_func = globals()[f"{thermostat}_thermostat"]
-        for t in tqdm(range(1, dt_max)):
+        for t in tqdm(prange(1, dt_max)):
             data[t] = integrator_func(
                 data,
                 t,

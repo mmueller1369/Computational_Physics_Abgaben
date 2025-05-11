@@ -1,6 +1,7 @@
 import numpy as np
 import params
 from typing import Union
+from numba import prange
 
 
 # General: Calculate the force between two particles using an arbitrary potential model.
@@ -30,8 +31,8 @@ def force_matrix(
         raise ValueError(f"Unknown potential: {potential}")
 
     force_matrix = np.zeros((config.shape[1], config.shape[1], 3))
-    for i in range(config.shape[1]):
-        for j in range(i + 1, config.shape[1]):
+    for i in prange(config.shape[1]):
+        for j in prange(i + 1, config.shape[1]):
             prop1 = config[:, i]
             prop2 = config[:, j]
             force = potential_func(
