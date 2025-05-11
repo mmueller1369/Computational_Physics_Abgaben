@@ -20,7 +20,7 @@ initial_configuration = assign_random_velocities(initial_configuration)
 
 
 # for dt_scale in [1, 10, 0.1]:
-for dt_scale in [1, 10, 0.1]:
+for dt_scale in [10, 0.1]:
     ## Equilibration
     params.dt_max = 10000
     dt = params.dt * dt_scale
