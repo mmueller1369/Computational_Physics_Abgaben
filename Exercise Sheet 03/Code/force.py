@@ -9,7 +9,7 @@ from numba import njit, prange
 #### unit of the force: (kcal/mole)/nm
 
 
-def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, r0, cutoff):
+def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
 
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
@@ -18,10 +18,10 @@ def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, r0, cutoff):
 
     i = 0
     # TODO
-    sf2a = r0 * r0 / cutoff / cutoff
+    sf2a = sigma * sigma / cutoff / cutoff
     sf6a = sf2a * sf2a * sf2a
 
-    epotcut = 8.0 * settings.eps * sf6a * (sf6a - 1.0)
+    epotcut = 8.0 * eps * sf6a * (sf6a - 1.0)
     epot = 0
     #    for i in range(N-1):
     for i in prange(N - 1):
@@ -35,9 +35,9 @@ def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, r0, cutoff):
             r2 = rijx * rijx + rijy * rijy + rijz * rijz
             # calculate fx, fy, fz
             if r2 < cutoff * cutoff:
-                sf2 = r0 * r0 / r2
+                sf2 = sigma * sigma / r2
                 sf6 = sf2 * sf2 * sf2
-                epot += 8.0 * eps * sf6 * (sf6 - 1.0)  # -epotcut)
+                epot += 8.0 * eps * sf6 * (sf6 - 1.0) - epotcut
                 ff = 48.0 * eps * sf6 * (sf6 - 0.5) / r2
                 fx[i] -= ff * rijx
                 fy[i] -= ff * rijy

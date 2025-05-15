@@ -21,10 +21,10 @@ def init():
     Tdesired = 300.0
     global eps  # eps in LJ (kcal/mole)
     eps = 0.29788162
-    global r0  # r0 in LJ (nm)
-    r0 = 0.188
-    global cutoff  # cutoff arbitrary at 2.5 r0
-    cutoff = 2.5 * r0
+    global sigma  # sigma in LJ (nm)
+    sigma = 0.188
+    global cutoff  # cutoff arbitrary at 2.5 sigma
+    cutoff = 2.5 * sigma
     global deltat  # time step (fs)
     deltat = 1
 
@@ -42,17 +42,17 @@ def init():
 
     # box size
     global xlo
-    xlo = 0 * r0
+    xlo = 0 * sigma
     global xhi
-    xhi = l * r0
+    xhi = l * sigma
     global ylo
-    ylo = 0 * r0
+    ylo = 0 * sigma
     global yhi
-    yhi = l * r0
+    yhi = l * sigma
     global zlo
-    zlo = 0 * r0
+    zlo = 0 * sigma
     global zhi
-    zhi = l * r0
+    zhi = l * sigma
 
     global deltaxyz  # lattice parameter to setup the initial configuration on a lattice
     deltaxyz = (xhi - xlo) / n1
