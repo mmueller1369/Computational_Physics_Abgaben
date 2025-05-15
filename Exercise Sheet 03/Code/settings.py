@@ -27,6 +27,8 @@ def init():
     cutoff = 2.5 * sigma
     global deltat  # time step (fs)
     deltat = 1
+    global dr  # binning distance for the g(r) in sigma
+    dr = 0.3
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
