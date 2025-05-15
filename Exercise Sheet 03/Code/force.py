@@ -17,7 +17,6 @@ def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
     N = len(x)
 
     i = 0
-    # TODO
     sf2a = sigma * sigma / cutoff / cutoff
     sf6a = sf2a * sf2a * sf2a
 
