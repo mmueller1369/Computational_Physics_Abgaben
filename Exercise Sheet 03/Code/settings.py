@@ -60,3 +60,8 @@ def init():
     # rescaling of temperature
     global Trescale
     Trescale = 1  # 1 = rescale temperature; 0 = no rescaling
+
+    global deltar  # bin size for histogram
+    deltar = 0.01 * sigma
+    global rmax  # maximum distance for histogram
+    rmax = 1 / 2 * l  # should be 1/2 of the box size

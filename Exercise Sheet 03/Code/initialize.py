@@ -85,3 +85,10 @@ def rescalevelocity(vx, vy, vz, T1, T2):
     vy = vy * math.sqrt(T1 / T2)
     vz = vz * math.sqrt(T1 / T2)
     return vx, vy, vz
+
+
+def histogram():
+    n_bins = int(settings.rmax / settings.deltar)
+    # dann folgt damit für die bin_breite
+    width_bin = settings.rmax / n_bins
+    return np.zeros(n_bins), width_bin

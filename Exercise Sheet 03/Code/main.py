@@ -11,6 +11,7 @@ import sys
 import time
 import misc
 import numpy as np
+import g_r
 
 start = time.time()
 
@@ -84,6 +85,8 @@ fileoutput = open("output_prod.txt", "w")
 fileenergy = open("energy_prod.txt", "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
+histogram, bin_width = initialize.histogram()
+
 for step in range(0, 2 * settings.nsteps):  # production
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
@@ -116,6 +119,13 @@ for step in range(0, 2 * settings.nsteps):  # production
             vx, vy, vz, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
+
+    # calculate the radial distribution function
+    if step % 10 == 0:
+        histogram = g_r.histogram(x, y, z, bin_width, settings.rmax, histogram)
+
+g_r.plot_histogram(histogram, settings.deltar, settings.rmax)
+
 
 fileoutput.close()
 fileenergy.close()
