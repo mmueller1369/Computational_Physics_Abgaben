@@ -109,7 +109,7 @@ for step in range(0, 2 * settings.nsteps):  # production
     if step % 100 == 0:  # save the trajectory
         misc.WriteTrajectory(fileoutput, step, x, y, z)
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
-        vx2, vy2 = misc.squarevelocity(
+        vx2, vy2, vz2 = misc.squarevelocity(
             vx, vy, vz, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
