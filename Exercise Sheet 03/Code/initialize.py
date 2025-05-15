@@ -38,6 +38,7 @@ def InitializeAtoms():
                 vy[n] = vy0
                 vz[n] = vz0
                 n += 1
+                nz += 1
 
             ny += 1
 
