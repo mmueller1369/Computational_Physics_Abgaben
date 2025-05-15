@@ -37,6 +37,7 @@ def InitializeAtoms():
                 vx[n] = vx0
                 vy[n] = vy0
                 vz[n] = vz0
+
                 n += 1
                 nz += 1
 

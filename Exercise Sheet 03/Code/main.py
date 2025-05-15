@@ -10,6 +10,7 @@ import debug
 import sys
 import time
 import misc
+import numpy as np
 
 start = time.time()
 
@@ -22,9 +23,11 @@ settings.init()
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
 x, y, z, vx, vy, vz = initialize.InitializeAtoms()
-
+f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
 # save configuration to visualize
-misc.WriteTrajectory(fileoutput, 0, x, y, z)
+misc.WriteTrajectory(
+    fileoutput, 0, x, y, z, vx, vy, vz, f_initial, f_initial, f_initial
+)
 
 # initialize the forces
 xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff, deltat, mass = misc.inputset()
@@ -71,7 +74,7 @@ for step in range(0, 1 * settings.nsteps):  # equilibration
             vx, vy, vz, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
-        misc.WriteTrajectory(fileoutput, step, x, y, z)
+        misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
 
 fileoutput.close()
 fileenergy.close()
@@ -107,7 +110,7 @@ for step in range(0, 2 * settings.nsteps):  # production
     )
 
     if step % 100 == 0:  # save the trajectory
-        misc.WriteTrajectory(fileoutput, step, x, y, z)
+        misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
         vx2, vy2, vz2 = misc.squarevelocity(
             vx, vy, vz, mass

@@ -9,7 +9,7 @@ def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2, vz2):
     fileenergy.write("%i %e %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2, vz2))
 
 
-def WriteTrajectory(fileoutput, itime, x, y, z):
+def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
 
     fileoutput.write("ITEM: TIMESTEP \n")
     fileoutput.write("%i \n" % itime)
@@ -19,10 +19,25 @@ def WriteTrajectory(fileoutput, itime, x, y, z):
     fileoutput.write("%e %e \n" % (settings.xlo, settings.xhi))
     fileoutput.write("%e %e \n" % (settings.ylo, settings.yhi))
     fileoutput.write("%e %e \n" % (settings.zlo, settings.zhi))
-    fileoutput.write("ITEM: ATOMS id type x y z \n")
+    fileoutput.write("ITEM: ATOMS id type x y z vx vy vz fx fy fz\n")
 
     for i in range(0, len(x)):
-        fileoutput.write("%i %i %e %e %e \n" % (i, i, x[i], y[i], z[i]))
+        fileoutput.write(
+            "%i %i %e %e %e %e %e %e %e %e %e\n"
+            % (
+                i,
+                i,
+                (x[i] % (settings.xhi - settings.xlo)),
+                (y[i] % (settings.yhi - settings.ylo)),
+                (z[i] % (settings.zhi - settings.zlo)),
+                vx[i],
+                vy[i],
+                vz[i],
+                fx[i],
+                fy[i],
+                fz[i],
+            )
+        )
 
 
 def inputset():
