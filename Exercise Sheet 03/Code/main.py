@@ -11,6 +11,7 @@ import sys
 import time
 import misc
 import numpy as np
+from tqdm import tqdm
 
 start = time.time()
 
@@ -36,7 +37,7 @@ fx, fy, fz, epot = force.forceLJ(
 )
 
 # -------------- EQUILIBRATION ---------------#
-for step in range(0, 1 * settings.nsteps):  # equilibration
+for step in tqdm(range(0, 1 * settings.nsteps)):  # equilibration
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -62,7 +63,7 @@ for step in range(0, 1 * settings.nsteps):  # equilibration
     )
 
     if (
-        settings.Trescale == 1 and step % 20 == 0
+        settings.Trescale == 1 and step % 10 == 0
     ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
         Trandom = initialize.temperature(vx, vy, vz)
         vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
@@ -84,7 +85,7 @@ fileoutput = open("output_prod.txt", "w")
 fileenergy = open("energy_prod.txt", "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
-for step in range(0, 2 * settings.nsteps):  # production
+for step in tqdm(range(0, 2 * settings.nsteps)):  # production
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
