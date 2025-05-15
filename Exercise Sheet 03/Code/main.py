@@ -21,36 +21,57 @@ fileenergy.write("#step  PE  KE  vx2 vy2\n")
 settings.init()
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
-x, y, vx, vy = initialize.InitializeAtoms()
+x, y, z, vx, vy, vz = initialize.InitializeAtoms()
 
 # save configuration to visualize
-misc.WriteTrajectory(fileoutput, 0, x, y)
+misc.WriteTrajectory(fileoutput, 0, x, y, z)
 
 # initialize the forces
-xlo, xhi, ylo, yhi, eps, sigma, cutoff, deltat, mass = misc.inputset()
-fx, fy, epot = force.forceLJ(x, y, xlo, xhi, ylo, yhi, eps, sigma, cutoff)
+xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff, deltat, mass = misc.inputset()
+fx, fy, fz, epot = force.forceLJ(
+    x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff
+)
 
 # -------------- EQUILIBRATION ---------------#
 for step in range(0, 1 * settings.nsteps):  # equilibration
 
-    x, y, vx, vy, fx, fy, epot = update.VelocityVerlet(
-        x, y, vx, vy, fx, fy, xlo, xhi, ylo, yhi, eps, sigma, cutoff, deltat, mass
+    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
+        x,
+        y,
+        z,
+        vx,
+        vy,
+        vz,
+        fx,
+        fy,
+        fz,
+        xlo,
+        xhi,
+        ylo,
+        yhi,
+        zlo,
+        zhi,
+        eps,
+        sigma,
+        cutoff,
+        deltat,
+        mass,
     )
 
     if (
         settings.Trescale == 1 and step % 20 == 0
     ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
-        Trandom = initialize.temperature(vx, vy)
-        vx, vy = initialize.rescalevelocity(vx, vy, settings.Tdesired, Trandom)
-        Trandom1 = initialize.temperature(vx, vy)
+        Trandom = initialize.temperature(vx, vy, vz)
+        vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
+        Trandom1 = initialize.temperature(vx, vy, vz)
 
     if step % 100 == 0:  # save the trajectory
-        ekin = update.KineticEnergy(vx, vy, mass)  # calculate the kinetic energy
-        vx2, vy2 = misc.squarevelocity(
-            vx, vy, mass
+        ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
+        vx2, vy2, vz2 = misc.squarevelocity(
+            vx, vy, vz, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
-        misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2)
-        misc.WriteTrajectory(fileoutput, step, x, y)
+        misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
+        misc.WriteTrajectory(fileoutput, step, x, y, z)
 
 fileoutput.close()
 fileenergy.close()
@@ -58,17 +79,36 @@ fileenergy.close()
 # -------------- PRODUCTION ---------------#
 fileoutput = open("output_prod.txt", "w")
 fileenergy = open("energy_prod.txt", "w")
-fileenergy.write("#step  PE  KE  vx2 vy2\n")
+fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 for step in range(0, 2 * settings.nsteps):  # production
 
-    x, y, vx, vy, fx, fy, epot = update.VelocityVerlet(
-        x, y, vx, vy, fx, fy, xlo, xhi, ylo, yhi, eps, sigma, cutoff, deltat, mass
+    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
+        x,
+        y,
+        z,
+        vx,
+        vy,
+        vz,
+        fx,
+        fy,
+        fz,
+        xlo,
+        xhi,
+        ylo,
+        yhi,
+        zlo,
+        zhi,
+        eps,
+        sigma,
+        cutoff,
+        deltat,
+        mass,
     )
 
     if step % 100 == 0:  # save the trajectory
         misc.WriteTrajectory(fileoutput, step, x, y)
-        ekin = update.KineticEnergy(vx, vy, mass)  # calculate the kinetic energy
+        ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
         vx2, vy2 = misc.squarevelocity(
             vx, vy, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
