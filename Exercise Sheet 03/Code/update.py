@@ -69,7 +69,7 @@ def VelocityVerlet(
         vy[i] += 0.5 * dt * (fy[i] + fy0[i]) / mass * convvelocity
         vz[i] += 0.5 * dt * (fz[i] + fz0[i]) / mass * convvelocity
 
-    return x, y, vx, vy, vz, fx, fy, fz, epot
+    return x, y, z, vx, vy, vz, fx, fy, fz, epot
 
 
 @njit(parallel=True)
