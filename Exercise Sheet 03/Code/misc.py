@@ -4,9 +4,9 @@ import math
 import sys
 
 
-def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2):
+def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2, vz2):
 
-    fileenergy.write("%i %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2))
+    fileenergy.write("%i %e %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2, vz2))
 
 
 def WriteTrajectory(fileoutput, itime, x, y, z):
