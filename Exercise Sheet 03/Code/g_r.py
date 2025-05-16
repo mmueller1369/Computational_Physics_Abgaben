@@ -94,4 +94,4 @@ def plot_rdf(rdf, bin_width):
     print("The value is at position: ", min_id * bin_width / settings.sigma, " r/sigma")
 
     np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
-    np.savetxt(os.path.join(settings.path, "r.txt"), x)
+    np.savetxt(os.path.join(settings.path, "r.txt"), x * settings.sigma)
