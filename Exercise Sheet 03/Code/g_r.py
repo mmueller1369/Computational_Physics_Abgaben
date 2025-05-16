@@ -83,4 +83,4 @@ def plot_rdf(rdf, bin_width):
     plt.show()
 
     np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
-    np.savetxt(os.path.join(settings.path, "r.txt"), x)
+    np.savetxt(os.path.join(settings.path, "r.txt"), x * settings.sigma)
