@@ -3,8 +3,8 @@ import numpy as np
 from numba import njit, prange
 
 
-@njit(parallel=True)
-# @njit
+# @njit(parallel=True)
+@njit
 
 #### unit of the force: (kcal/mole)/nm
 
