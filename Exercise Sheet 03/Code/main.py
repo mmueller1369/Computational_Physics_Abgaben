@@ -37,7 +37,7 @@ fx, fy, fz, epot = force.forceLJ(
 )
 
 # -------------- EQUILIBRATION ---------------#
-for step in range(0, 1 * settings.nsteps):  # equilibration
+for step in range(0, settings.nsteps_equi):  # equilibration
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -87,7 +87,7 @@ fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 histogram, bin_width = initialize.histogram()
 
-for step in range(0, 2 * settings.nsteps):  # production
+for step in range(0, settings.nsteps_production):  # production
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -121,12 +121,14 @@ for step in range(0, 2 * settings.nsteps):  # production
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
 
     # calculate the radial distribution function
-    if step % 10 == 0:
-        histogram = g_r.histogram(x, y, z, bin_width, settings.rmax, histogram)
+    if step % settings.n_analyze == 0:
+        histogram[int(step / settings.n_analyze)] = g_r.histogram(
+            x, y, z, bin_width, settings.rmax
+        )
 
-g_r.plot_histogram(histogram, settings.deltar, settings.rmax)
-
-
+# g_r.plot_histogram(histogram[-1])
+rdf = g_r.calc_RDF(histogram, bin_width)
+g_r.plot_rdf(rdf)
 fileoutput.close()
 fileenergy.close()
 

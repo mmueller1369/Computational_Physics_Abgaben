@@ -91,4 +91,4 @@ def histogram():
     n_bins = int(settings.rmax / settings.deltar)
     # dann folgt damit für die bin_breite
     width_bin = settings.rmax / n_bins
-    return np.zeros(n_bins), width_bin
+    return np.zeros((settings.n_gr, n_bins)), width_bin
