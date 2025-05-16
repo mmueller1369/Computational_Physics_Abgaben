@@ -67,7 +67,7 @@ def init():
     global deltar  # bin size for histogram
     deltar = 0.01 * sigma
     global rmax  # maximum distance for histogram
-    rmax = 1 / 2 * l  # should be 1/2 of the box size
+    rmax = 1 / 2 * l * sigma  # should be 1/2 of the box size
     global n_analyze  # every n_analyze steps, the histogram is calculated
     n_analyze = 10
     global n_gr

@@ -68,10 +68,11 @@ def plot_histogram(hist):
 
 def plot_rdf(rdf, bin_width):
     x = np.arange(0, len(rdf)) * bin_width / settings.sigma
-    box_length_sigma = settings.xhi / settings.sigma / 2
-    other_line = np.sqrt(2) * box_length_sigma
-    plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
-    plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length")
+    # box_length_sigma = settings.xhi / settings.sigma / 2
+    # other_line = np.sqrt(2) * box_length_sigma
+    # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
+    # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
+    plt.title("Radial Distribution Function LJ Potential")
     plt.plot(x, rdf, label="g(r)")
     plt.xlabel("r/ sigma")
     plt.ylabel("g(r)")
