@@ -3,4 +3,5 @@
 *.db
 *.npy
 *.dat
+*.txt
 Excersice Sheet 01/output/vel_verlet.dat
