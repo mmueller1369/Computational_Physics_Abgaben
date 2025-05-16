@@ -3,6 +3,7 @@ import numpy as np
 import settings
 from force import pbc
 from numba import njit, prange
+import os
 
 
 @njit
@@ -33,22 +34,23 @@ def histogram(x, y, z, bin_width, rmax):
 def calc_RDF(histogram, bin_width):
     # calculate the average number of atoms in each bin
     total_bins = histogram.shape[1]
-
+    nparticles = settings.n1 * settings.n2 * settings.n3
     histogram_new = np.zeros(total_bins)
     for i in prange(total_bins):
         total_atoms = 0
         for j in prange(histogram.shape[0]):
             total_atoms += histogram[j][i]
-        histogram_new[i] = total_atoms / settings.n_gr / settings.nsteps_production
+        histogram_new[i] = total_atoms / settings.n_gr / nparticles
 
     # calculate the n(b) idela gas
     histogram_ideal = np.zeros(total_bins)
+    rho = settings.rho / settings.sigma**3
     for i in prange(total_bins):
         histogram_ideal[i] = (
             4
             / 3
             * np.pi
-            * settings.rho
+            * rho
             * ((i * bin_width + bin_width) ** 3 - (i * bin_width) ** 3)
         )
     return histogram_new / histogram_ideal, [histogram_new, histogram_ideal]
@@ -77,5 +79,8 @@ def plot_rdf(rdf, bin_width):
     plt.xlabel("r/ sigma")
     plt.ylabel("g(r)")
     plt.legend()
-    plt.savefig("g_r.png")
+    plt.savefig(os.path.join(settings.path, "g_r.png"))
     plt.show()
+
+    np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
+    np.savetxt(os.path.join(settings.path, "r.txt"), x)

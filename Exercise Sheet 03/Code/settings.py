@@ -7,6 +7,7 @@
 # temperature: K
 
 import numpy as np
+import os
 
 
 def init():
@@ -72,3 +73,6 @@ def init():
     n_analyze = 10
     global n_gr
     n_gr = int(nsteps_production / n_analyze)
+
+    global path  # path to the output files
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
