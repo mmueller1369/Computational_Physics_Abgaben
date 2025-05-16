@@ -128,9 +128,9 @@ for step in range(0, settings.nsteps_production):  # production
 
 # g_r.plot_histogram(histogram[-1])
 rdf, [n_b, n_id] = g_r.calc_RDF(histogram, bin_width)
-g_r.plot_rdf(rdf)
-g_r.plot_rdf(n_b)
-g_r.plot_rdf(n_id)
+g_r.plot_rdf(rdf, bin_width)
+# g_r.plot_rdf(n_b)
+# g_r.plot_rdf(n_id)
 fileoutput.close()
 fileenergy.close()
 

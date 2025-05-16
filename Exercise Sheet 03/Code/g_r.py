@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import settings
+from force import pbc
 from numba import njit, prange
 
 
@@ -11,9 +12,12 @@ def histogram(x, y, z, bin_width, rmax):
     hist = np.zeros(int(rmax / bin_width))
     for i in prange(len(x)):
         for j in prange(i + 1, len(x)):
-            rijx = x[i] - x[j]
-            rijy = y[i] - y[j]
-            rijz = z[i] - z[j]
+            # rijx = x[i] - x[j]
+            # rijy = y[i] - y[j]
+            # rijz = z[i] - z[j]
+            rijx = pbc(x[i], x[j], settings.xlo, settings.xhi)
+            rijy = pbc(y[i], y[j], settings.ylo, settings.yhi)
+            rijz = pbc(z[i], z[j], settings.zlo, settings.zhi)
 
             r2 = rijx * rijx + rijy * rijy + rijz * rijz
             if r2 < rmax * rmax:
@@ -62,6 +66,14 @@ def plot_histogram(hist):
     print("Sum of all bins:", total_sum)
 
 
-def plot_rdf(rdf):
-    plt.plot(rdf)
+def plot_rdf(rdf, bin_width):
+    x = np.arange(0, len(rdf)) * bin_width / settings.sigma
+    box_length_sigma = settings.xhi / settings.sigma / 2
+    other_line = np.sqrt(2) * box_length_sigma
+    plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
+    plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length")
+    plt.plot(x, rdf, label="g(r)")
+    plt.xlabel("r/ sigma")
+    plt.ylabel("g(r)")
+    plt.legend()
     plt.show()
