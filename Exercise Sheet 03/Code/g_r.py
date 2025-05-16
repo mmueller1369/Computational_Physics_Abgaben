@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import settings
+import os
 from force import pbc
 from numba import njit, prange
 
@@ -39,8 +40,9 @@ def calc_RDF(histogram, bin_width):
         total_atoms = 0
         for j in prange(histogram.shape[0]):
             total_atoms += histogram[j][i]
-        histogram_new[i] = total_atoms / settings.n_gr / settings.nsteps_production
-
+        histogram_new[i] = (
+            total_atoms / settings.n_gr / settings.n1 / settings.n2 / settings.n3
+        )
     # calculate the n(b) idela gas
     histogram_ideal = np.zeros(total_bins)
     for i in prange(total_bins):
@@ -73,9 +75,11 @@ def plot_rdf(rdf, bin_width):
     # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
     # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
     plt.title("Radial Distribution Function LJ Potential")
+    plt.axhline(1, color="y", linestyle="--", label="Asymptote")
     plt.plot(x, rdf, label="g(r)")
     plt.xlabel("r/ sigma")
     plt.ylabel("g(r)")
     plt.legend()
-    plt.savefig("g_r.png")
+    path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output", "g_r.png")
+    plt.savefig(path)
     plt.show()

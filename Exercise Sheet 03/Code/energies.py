@@ -1,4 +1,5 @@
 import numpy as np
+import os
 import matplotlib.pyplot as plt
 
 
@@ -22,10 +23,14 @@ def plot_energies(data):
     plt.plot(data[:, 0], data[:, 2], label="Kinetic Energy")
     total_energy = data[:, 1] + data[:, 2]
     plt.plot(data[:, 0], total_energy, label="Total Energy")
-    plt.xlabel("Step")
-    plt.ylabel("Energy")
-    plt.title("Energy Plot")
+    plt.xlabel("Timeste")
+    plt.ylabel("Energy in Joule")
+    plt.title("Energy Plot MD Simulation")
     plt.legend()
+    path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "output", "energy.png"
+    )
+    plt.savefig(path)
     plt.show()
 
 
