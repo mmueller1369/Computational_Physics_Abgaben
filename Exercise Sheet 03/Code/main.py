@@ -11,9 +11,7 @@ import sys
 import time
 import misc
 import numpy as np
-from tqdm import tqdm
 import g_r
-import matplotlib.pyplot as plt
 
 start = time.time()
 
@@ -39,7 +37,7 @@ fx, fy, fz, epot = force.forceLJ(
 )
 
 # -------------- EQUILIBRATION ---------------#
-for step in tqdm(range(0, 1 * settings.nsteps)):  # equilibration
+for step in range(0, settings.nsteps_equi):  # equilibration
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -87,8 +85,9 @@ fileoutput = open("output_prod.txt", "w")
 fileenergy = open("energy_prod.txt", "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
-hists = np.zeros((2 * settings.nsteps, settings.nbins))
-for step in tqdm(range(0, 2 * settings.nsteps)):  # production
+histogram, bin_width = initialize.histogram()
+
+for step in range(0, settings.nsteps_production):  # production
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -121,18 +120,18 @@ for step in tqdm(range(0, 2 * settings.nsteps)):  # production
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
 
-    if step % 10 == 0:
-        # calculate the g(r) function
-        hists[step // 10] = g_r.hist_g_r(
-            hists[step // 10], x, y, z, xlo, xhi, ylo, yhi, zlo, zhi
+    # calculate the radial distribution function
+    if step % settings.n_analyze == 0:
+        histogram[int(step / settings.n_analyze)] = g_r.histogram(
+            x, y, z, bin_width, settings.rmax
         )
 
-
+# g_r.plot_histogram(histogram[-1])
+rdf, [n_b, n_id] = g_r.calc_RDF(histogram, bin_width)
+g_r.plot_rdf(rdf, bin_width)
+# g_r.plot_rdf(n_b)
+# g_r.plot_rdf(n_id)
 fileoutput.close()
 fileenergy.close()
-
-g_r, distance = g_r.g_r(hists)
-plt.plot(distance, g_r)
-plt.show()
 
 print("total time = ", time.time() - start)

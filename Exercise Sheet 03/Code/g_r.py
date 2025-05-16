@@ -1,44 +1,80 @@
+import matplotlib.pyplot as plt
+import numpy as np
 import settings
-import math
 from force import pbc
 from numba import njit, prange
-import numpy as np
 
 
-@njit(parallel=True)
-def hist_g_r(hist, x, y, z, xlo, xhi, ylo, yhi, zlo, zhi):
-    """
-    Calculate the g(r) function for a given set of coordinates.
-    """
-    dr = settings.dr * settings.sigma
-    N = len(x)
-
-    for i in prange(N - 1):
-        j = i + 1
-        for j in prange(i + 1, N):
-            rijx = pbc(x[i], x[j], xlo, xhi)
-            rijy = pbc(y[i], y[j], ylo, yhi)
-            rijz = pbc(z[i], z[j], zlo, zhi)
+@njit
+def histogram(x, y, z, bin_width, rmax):
+    # calc the distance between the particles
+    # only consider distances less than rmax
+    hist = np.zeros(int(rmax / bin_width))
+    for i in prange(len(x)):
+        for j in prange(i + 1, len(x)):
+            # rijx = x[i] - x[j]
+            # rijy = y[i] - y[j]
+            # rijz = z[i] - z[j]
+            rijx = pbc(x[i], x[j], settings.xlo, settings.xhi)
+            rijy = pbc(y[i], y[j], settings.ylo, settings.yhi)
+            rijz = pbc(z[i], z[j], settings.zlo, settings.zhi)
 
             r2 = rijx * rijx + rijy * rijy + rijz * rijz
-            r = math.sqrt(r2)
-
-            bin_index = int(r / dr)
-            hist[bin_index] += 1
+            if r2 < rmax * rmax:
+                r = np.sqrt(r2)
+                bin_n = int(r / bin_width)
+                hist[bin_n] += 2
+    # after sort the distance in the bins
 
     return hist
 
 
-def g_r(hists):
-    """
-    Calculate the g(r) function from the histograms.
-    """
-    dr = settings.dr * settings.sigma
-    N = settings.n1 * settings.n2 * settings.n3
-    N_gr = len(hists)
-    bins = np.arange(0, settings.nbins * dr, dr)
-    n_b = np.sum(hists, axis=0) / (N_gr * N)
-    n_id = 4 / 3 * math.pi * settings.rho * ((bins * dr + dr) ** 3 - (bins * dr) ** 3)
-    g_r = n_b / n_id
-    print(bins, n_b, n_id, g_r)
-    return g_r, bins
+@njit
+def calc_RDF(histogram, bin_width):
+    # calculate the average number of atoms in each bin
+    total_bins = histogram.shape[1]
+
+    histogram_new = np.zeros(total_bins)
+    for i in prange(total_bins):
+        total_atoms = 0
+        for j in prange(histogram.shape[0]):
+            total_atoms += histogram[j][i]
+        histogram_new[i] = total_atoms / settings.n_gr / settings.nsteps_production
+
+    # calculate the n(b) idela gas
+    histogram_ideal = np.zeros(total_bins)
+    for i in prange(total_bins):
+        histogram_ideal[i] = (
+            4
+            / 3
+            * np.pi
+            * settings.rho
+            * ((i * bin_width + bin_width) ** 3 - (i * bin_width) ** 3)
+        )
+    return histogram_new / histogram_ideal, [histogram_new, histogram_ideal]
+
+
+def plot_histogram(hist):
+    # plot the histogram
+    plt.plot(hist)
+    plt.xlabel("r (nm)")
+    plt.ylabel("g(r)")
+    plt.title("test")
+    plt.show()
+
+    total_sum = np.sum(hist)
+    print("Sum of all bins:", total_sum)
+
+
+def plot_rdf(rdf, bin_width):
+    x = np.arange(0, len(rdf)) * bin_width / settings.sigma
+    # box_length_sigma = settings.xhi / settings.sigma / 2
+    # other_line = np.sqrt(2) * box_length_sigma
+    # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
+    # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
+    plt.title("Radial Distribution Function LJ Potential")
+    plt.plot(x, rdf, label="g(r)")
+    plt.xlabel("r/ sigma")
+    plt.ylabel("g(r)")
+    plt.legend()
+    plt.show()
