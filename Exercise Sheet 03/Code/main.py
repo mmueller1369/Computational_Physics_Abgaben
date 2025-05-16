@@ -12,6 +12,7 @@ import time
 import misc
 import numpy as np
 import g_r
+from tqdm import tqdm
 
 start = time.time()
 
@@ -37,7 +38,7 @@ fx, fy, fz, epot = force.forceLJ(
 )
 
 # -------------- EQUILIBRATION ---------------#
-for step in range(0, settings.nsteps_equi):  # equilibration
+for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,
@@ -87,7 +88,7 @@ fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 histogram, bin_width = initialize.histogram()
 
-for step in range(0, settings.nsteps_production):  # production
+for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
         x,

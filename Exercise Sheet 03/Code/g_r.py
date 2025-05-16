@@ -77,4 +77,5 @@ def plot_rdf(rdf, bin_width):
     plt.xlabel("r/ sigma")
     plt.ylabel("g(r)")
     plt.legend()
+    plt.savefig("g_r.png")
     plt.show()
