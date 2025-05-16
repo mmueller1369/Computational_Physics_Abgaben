@@ -9,6 +9,7 @@ from numba import njit, prange
 #### unit of the force: (kcal/mole)/nm
 
 
+@njit(parallel=True)
 def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
 
     fx = np.zeros(shape=len(x))
