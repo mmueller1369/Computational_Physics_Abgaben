@@ -19,7 +19,7 @@ def histogram(x, y, z, bin_width, rmax):
             if r2 < rmax * rmax:
                 r = np.sqrt(r2)
                 bin_n = int(r / bin_width)
-                hist[bin_n] += 1
+                hist[bin_n] += 2
     # after sort the distance in the bins
 
     return hist
@@ -47,7 +47,7 @@ def calc_RDF(histogram, bin_width):
             * settings.rho
             * ((i * bin_width + bin_width) ** 3 - (i * bin_width) ** 3)
         )
-    return histogram_new / histogram_ideal
+    return histogram_new / histogram_ideal, [histogram_new, histogram_ideal]
 
 
 def plot_histogram(hist):
