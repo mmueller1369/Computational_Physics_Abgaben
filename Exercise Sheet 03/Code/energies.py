@@ -2,6 +2,11 @@ import numpy as np
 import os
 import matplotlib.pyplot as plt
 
+multiplier = 1 / 4.1868e-06  # kcal*fs/gram/nm to nm/fs
+multiplier = 475081.0162102793
+multiplier = 4.1868e5
+# multiplier = 2.39e5
+
 
 def read_energy(filename):
     with open(filename, "r", encoding="utf-8") as file:
@@ -34,6 +39,20 @@ def plot_energies(data):
     )
     plt.savefig(path)
     plt.show()
+
+
+# def plot_energies(data):
+#     multipliers = np.logspace(5, 6, 100)  # exponents 5 to 6 (i.e., 1e5 to 1e6)
+#     var = np.array(
+#         [np.var(data[:, 1] + data[:, 2] * multiplier) for multiplier in multipliers]
+#     )
+#     min_index = np.argmin(var)
+#     best_multiplier = multipliers[min_index]
+#     print("Multiplier zum Minimum von var:", best_multiplier)
+#     plt.semilogx(multipliers, var)
+#     plt.axvline(best_multiplier)
+
+#     plt.show()
 
 
 if __name__ == "__main__":
