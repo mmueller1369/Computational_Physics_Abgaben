@@ -24,9 +24,8 @@ def read_energy(filename):
 
 
 def plot_energies(data):
-    data[:, 2] *= 1e10
     plt.plot(data[:, 0], data[:, 1], label="Potential Energy kcal/mol")
-    plt.plot(data[:, 0], data[:, 2], label="Kinetic Energy")
+    plt.plot(data[:, 0], data[:, 2], label="Kinetic Energy kcal/mol")
     total_energy = data[:, 1] + data[:, 2]
     print("pot mean:", data[:, 1].mean())
     print("kin mean:", data[:, 2].mean())
