@@ -12,6 +12,8 @@ import time
 import misc
 import numpy as np
 from tqdm import tqdm
+import g_r
+import matplotlib.pyplot as plt
 
 start = time.time()
 
@@ -85,6 +87,7 @@ fileoutput = open("output_prod.txt", "w")
 fileenergy = open("energy_prod.txt", "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
+hists = np.zeros((2 * settings.nsteps, settings.nbins))
 for step in tqdm(range(0, 2 * settings.nsteps)):  # production
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
@@ -118,7 +121,18 @@ for step in tqdm(range(0, 2 * settings.nsteps)):  # production
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
 
+    if step % 10 == 0:
+        # calculate the g(r) function
+        hists[step // 10] = g_r.hist_g_r(
+            hists[step // 10], x, y, z, xlo, xhi, ylo, yhi, zlo, zhi
+        )
+
+
 fileoutput.close()
 fileenergy.close()
+
+g_r, distance = g_r.g_r(hists)
+plt.plot(distance, g_r)
+plt.show()
 
 print("total time = ", time.time() - start)

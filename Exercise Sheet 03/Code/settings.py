@@ -27,8 +27,6 @@ def init():
     cutoff = 2.5 * sigma
     global deltat  # time step (fs)
     deltat = 1
-    global dr  # binning distance for the g(r) in sigma
-    dr = 0.3
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
@@ -39,6 +37,7 @@ def init():
     n3 = 5
 
     # desired density
+    global rho
     rho = 0.01  # N/V = 0.01 sigma^-3
     l = (n1 * n2 * n3 / rho) ** (1 / 3)  # l = (N/V)^(1/3) = (n1*n2*n3/rho)^(1/3)
 
@@ -62,3 +61,9 @@ def init():
     # rescaling of temperature
     global Trescale
     Trescale = 1  # 1 = rescale temperature; 0 = no rescaling
+
+    # params for g(r)
+    global dr  # binning distance for the g(r) in sigma
+    dr = 0.1
+    global nbins  # number of bins for the g(r)
+    nbins = int((max((xhi - xlo), (yhi - ylo), (zhi - zlo)) / 2) / dr)

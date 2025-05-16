@@ -6,17 +6,12 @@ import numpy as np
 
 
 @njit(parallel=True)
-def hist_g_r(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi):
+def hist_g_r(hist, x, y, z, xlo, xhi, ylo, yhi, zlo, zhi):
     """
     Calculate the g(r) function for a given set of coordinates.
     """
     dr = settings.dr * settings.sigma
     N = len(x)
-    rmax = (
-        max((xhi - xlo), (yhi - ylo), (zhi - zlo)) / 2
-    )  # maximum distance possible according to minimum image convention
-    nbins = int(rmax / dr)
-    hist = np.zeros(nbins)
 
     for i in prange(N - 1):
         j = i + 1
@@ -41,9 +36,9 @@ def g_r(hists):
     dr = settings.dr * settings.sigma
     N = settings.n1 * settings.n2 * settings.n3
     N_gr = len(hists)
-    bins = np.arange(0, N_gr * dr, dr)
+    bins = np.arange(0, settings.nbins * dr, dr)
     n_b = np.sum(hists, axis=0) / (N_gr * N)
     n_id = 4 / 3 * math.pi * settings.rho * ((bins * dr + dr) ** 3 - (bins * dr) ** 3)
     g_r = n_b / n_id
-    distance = bins - dr / 2
-    return g_r, distance
+    print(bins, n_b, n_id, g_r)
+    return g_r, bins

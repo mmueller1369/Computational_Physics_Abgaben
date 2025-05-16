@@ -9,6 +9,14 @@ def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2, vz2):
     fileenergy.write("%i %e %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2, vz2))
 
 
+def WriteGr(filegr, itime, hist):
+
+    filegr.write("%i" % itime)
+    for value in hist:
+        filegr.write("%e " % value)
+    filegr.write("\n")
+
+
 def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
 
     fileoutput.write("ITEM: TIMESTEP \n")
