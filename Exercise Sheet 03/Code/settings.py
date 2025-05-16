@@ -32,11 +32,11 @@ def init():
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 5
+    n1 = 8
     global n2
-    n2 = 5
+    n2 = 8
     global n3
-    n3 = 5
+    n3 = 8
 
     # desired density
     global rho
@@ -65,7 +65,7 @@ def init():
     Trescale = 1  # 1 = rescale temperature; 0 = no rescaling
 
     global deltar  # bin size for histogram
-    deltar = 0.2 * sigma
+    deltar = 0.01 * sigma
     global rmax  # maximum distance for histogram
     rmax = 1 / 2 * l  # should be 1/2 of the box size
     global n_analyze  # every n_analyze steps, the histogram is calculated
