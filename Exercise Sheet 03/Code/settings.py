@@ -33,11 +33,11 @@ def init():
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 5
+    n1 = 8
     global n2
-    n2 = 5
+    n2 = 8
     global n3
-    n3 = 5
+    n3 = 8
 
     # desired density
     global rho
