@@ -19,14 +19,14 @@ def read_energy(filename):
 
 
 def plot_energies(data):
-    plt.plot(data[:, 0], data[:, 1], label="Potential Energy")
+    plt.plot(data[:, 0], data[:, 1], label="Potential Energy kcal/mol")
     plt.plot(data[:, 0], data[:, 2], label="Kinetic Energy")
     total_energy = data[:, 1] + data[:, 2]
     print("pot mean:", data[:, 1].mean())
     print("kin mean:", data[:, 2].mean())
     plt.plot(data[:, 0], total_energy, label="Total Energy")
     plt.xlabel("Timeste")
-    plt.ylabel("Energy in Joule")
+    plt.ylabel("Energy kcal/mol")
     plt.title("Energy Plot MD Simulation")
     plt.legend()
     path = os.path.join(
