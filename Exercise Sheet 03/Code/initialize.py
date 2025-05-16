@@ -3,6 +3,7 @@ import random
 import math
 import debug
 import numpy as np
+from tqdm import tqdm
 
 
 def InitializeAtoms():
@@ -17,6 +18,8 @@ def InitializeAtoms():
     vx = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
     vy = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
     vz = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+    nx = 0
+    pbar = tqdm(total=settings.n1, desc="Initializing atoms")
     while nx < settings.n1:
         ny = 0
         while ny < settings.n2:
@@ -44,6 +47,8 @@ def InitializeAtoms():
             ny += 1
 
         nx += 1
+        pbar.update(1)
+    pbar.close()
     settings.nparticles = n
 
     # cancel the linear momentum
@@ -85,3 +90,10 @@ def rescalevelocity(vx, vy, vz, T1, T2):
     vy = vy * math.sqrt(T1 / T2)
     vz = vz * math.sqrt(T1 / T2)
     return vx, vy, vz
+
+
+def histogram():
+    n_bins = int(settings.rmax / settings.deltar)
+    # dann folgt damit für die bin_breite
+    width_bin = settings.rmax / n_bins
+    return np.zeros((settings.n_gr, n_bins)), width_bin

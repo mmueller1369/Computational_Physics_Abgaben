@@ -11,8 +11,10 @@ import numpy as np
 
 def init():
 
-    global nsteps  # number of time step to analyze
-    nsteps = 10000
+    global nsteps_equi  # number of time step to analyze
+    nsteps_equi = 10000
+    global nsteps_production
+    nsteps_production = 20000
     global mass  # mass of the LJ particles (gram/mole)
     mass = 39.95
     global kb  # boltzmann's constant (kcal/mole/K)
@@ -62,8 +64,11 @@ def init():
     global Trescale
     Trescale = 1  # 1 = rescale temperature; 0 = no rescaling
 
-    # params for g(r)
-    global dr  # binning distance for the g(r) in sigma
-    dr = 0.1
-    global nbins  # number of bins for the g(r)
-    nbins = int((max((xhi - xlo), (yhi - ylo), (zhi - zlo)) / 2) / dr)
+    global deltar  # bin size for histogram
+    deltar = 0.01 * sigma
+    global rmax  # maximum distance for histogram
+    rmax = 1 / 2 * l * sigma  # should be 1/2 of the box size
+    global n_analyze  # every n_analyze steps, the histogram is calculated
+    n_analyze = 10
+    global n_gr
+    n_gr = int(nsteps_production / n_analyze)
