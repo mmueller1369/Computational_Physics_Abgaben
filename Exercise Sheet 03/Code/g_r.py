@@ -83,6 +83,15 @@ def plot_rdf(rdf, bin_width):
     plt.legend()
     plt.savefig(os.path.join(settings.path, "g_r.png"))
     plt.show()
+    # evaluate the plot
+    # find max peak
+    max_id = np.argmax(rdf)
+    print("Max value in RDF is: ", rdf[max_id])
+    print("The value is at position: ", max_id, " r/sigma")
+    min_id_rel = np.argmin(rdf[max_id:])
+    min_id = max_id + min_id_rel
+    print("Next minimum after max is: ", rdf[min_id])
+    print("The value is at position: ", min_id, " r/sigma")
 
     np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
     np.savetxt(os.path.join(settings.path, "r.txt"), x)
