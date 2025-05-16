@@ -33,10 +33,11 @@ integral = rho / 2 * np.sum(integral_core) * settings.deltar
 print(integral * settings.n1 * settings.n2 * settings.n3)
 
 
-# integral = rho / 2 * np.sum(integral_core[2:] * (settings.deltar / settings.sigma))
-# print(r, pot_r)
-# print(integral)
-# plt.plot(r, pot_r)
-# plt.plot(r, g_r)
-# plt.ylim(-1, 1)
-# plt.show()
+integral_core = (
+    (g_r - 1) * 4 * np.pi * r**2
+)  # over 3d space thus the volume element of the sphere
+integral = (
+    1 / (settings.kb * settings.Tdesired * rho)
+    + 1 / (settings.kb * settings.Tdesired) * np.sum(integral_core) * settings.deltar
+)
+print(integral)
