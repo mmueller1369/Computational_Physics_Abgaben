@@ -75,11 +75,13 @@ def VelocityVerlet(
 @njit(parallel=True)
 def KineticEnergy(vx, vy, vz, mass):
 
-    # calcualte the kinetic energy in joule
     ekin = 0
     N = len(vx)
     i = 0
+    convvelocity = 4.1868e5
 
     for i in prange(N):
-        ekin += 0.5 * mass * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i])
+        ekin += (
+            0.5 * mass * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]) * convvelocity
+        )
     return ekin

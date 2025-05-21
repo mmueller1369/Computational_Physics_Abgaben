@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import settings
+import os
 from force import pbc
 from numba import njit, prange
 import os
@@ -75,12 +76,22 @@ def plot_rdf(rdf, bin_width):
     # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
     # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
     plt.title("Radial Distribution Function LJ Potential")
+    plt.axhline(1, color="y", linestyle="--", label="Asymptote")
     plt.plot(x, rdf, label="g(r)")
     plt.xlabel("r/ sigma")
     plt.ylabel("g(r)")
     plt.legend()
     plt.savefig(os.path.join(settings.path, "g_r.png"))
     plt.show()
+    # evaluate the plot
+    # find max peak
+    max_id = np.argmax(rdf)
+    print("Max value in RDF is: ", rdf[max_id])
+    print("The value is at position: ", max_id * bin_width / settings.sigma, " r/sigma")
+    min_id_rel = np.argmin(rdf[max_id:])
+    min_id = max_id + min_id_rel
+    print("Next minimum after max is: ", rdf[min_id])
+    print("The value is at position: ", min_id * bin_width / settings.sigma, " r/sigma")
 
     np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
     np.savetxt(os.path.join(settings.path, "r.txt"), x * settings.sigma)
