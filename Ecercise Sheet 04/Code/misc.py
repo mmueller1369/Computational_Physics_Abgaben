@@ -61,6 +61,9 @@ def inputset():
         settings.cutoff,
         settings.deltat,
         settings.mass,
+        settings.eps_wall,
+        settings.sigma_wall,
+        settings.cutoff_wall,
     )
 
 
