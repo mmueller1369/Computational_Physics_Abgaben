@@ -133,6 +133,6 @@ def forceLJ_wall_z(
                 * (3 * sf3a**2 - 1.0)
                 / r_wall**2
             )
-            fz[i] -= ff * r_wall
+            fz[i] += ff * r_wall
 
     return fx, fy, fz, epot

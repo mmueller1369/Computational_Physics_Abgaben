@@ -88,7 +88,7 @@ for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
         vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
         Trandom1 = initialize.temperature(vx, vy, vz)
 
-    if step % 100 == 0:  # save the trajectory
+    if step % 10 == 0:  # save the trajectory
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
         vx2, vy2, vz2 = misc.squarevelocity(
             vx, vy, vz, mass
@@ -134,7 +134,7 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
         cutoff_wall,
     )
 
-    if step % 100 == 0:  # save the trajectory
+    if step % 10 == 0:  # save the trajectory
         misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
         vx2, vy2, vz2 = misc.squarevelocity(
