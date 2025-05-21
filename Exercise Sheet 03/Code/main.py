@@ -16,12 +16,11 @@ from tqdm import tqdm
 
 start = time.time()
 
-
-fileoutput = open("output_equilibration.txt", "w")
-fileenergy = open("energy_equilibration.txt", "w")
-fileenergy.write("#step  PE  KE  vx2 vy2\n")
 # initialization of global variable
 settings.init()
+fileoutput = open(f"output_equilibration.txt", "w")
+fileenergy = open(f"energy_equilibration.txt", "w")
+fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
 x, y, z, vx, vy, vz = initialize.InitializeAtoms()
@@ -82,9 +81,9 @@ fileoutput.close()
 fileenergy.close()
 
 # -------------- PRODUCTION ---------------#
-fileoutput = open("output_prod.txt", "w")
-fileenergy = open("energy_prod.txt", "w")
-fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
+fileoutpuft = open(f"output_prod.txt", "w")
+fileenergfy = open(f"energy_prod.txt", "w")
+fileenergfy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 histogram, bin_width = initialize.histogram()
 
@@ -114,12 +113,12 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
     )
 
     if step % 100 == 0:  # save the trajectory
-        misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
+        misc.WriteTrajectory(fileoutpuft, step, x, y, z, vx, vy, vz, fx, fy, fz)
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
         vx2, vy2, vz2 = misc.squarevelocity(
             vx, vy, vz, mass
         )  # calculate v_x^2 to compare with 0.5Nk_BT
-        misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
+        misc.WriteEnergy(fileenergfy, step, epot, ekin, vx2, vy2, vz2)
 
     # calculate the radial distribution function
     if step % settings.n_analyze == 0:
@@ -130,8 +129,8 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 # g_r.plot_histogram(histogram[-1])
 rdf, [n_b, n_id] = g_r.calc_RDF(histogram, bin_width)
 g_r.plot_rdf(rdf, bin_width)
-# g_r.plot_rdf(n_b)
-# g_r.plot_rdf(n_id)
+# g_r.plot_histogram(n_b)
+# g_r.plot_histogram(n_id)
 fileoutput.close()
 fileenergy.close()
 
