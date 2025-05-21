@@ -41,7 +41,7 @@ def init():
 
     # desired density
     global rho
-    rho = 0.01  # N/V = 0.01 sigma^-3
+    rho = 0.5  # N/V = 0.01 sigma^-3
     l = (n1 * n2 * n3 / rho) ** (1 / 3)  # l = (N/V)^(1/3) = (n1*n2*n3/rho)^(1/3)
 
     # box size
