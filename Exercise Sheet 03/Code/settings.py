@@ -30,6 +30,12 @@ def init():
     cutoff = 2.5 * sigma
     global deltat  # time step (fs)
     deltat = 2
+    global eps_wall  # eps for wall (kcal/mole)
+    eps_wall = 1.4887
+    global sigma_wall  # sigma for wall (nm)
+    sigma_wall = 0.0376
+    global cutoff_wall  # cutoff for wall (nm)
+    cutoff_wall = 2.5 * sigma_wall
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
