@@ -17,7 +17,7 @@ import os
 import force
 
 start = time.time()
-part = "a"
+part = "d3"
 
 # initialization of global variable
 settings.init()
@@ -55,13 +55,15 @@ fx, fy, fz, epot = force.forceLJ(
 )
 
 # for part c
-# eps = 0.25**settings.kb*settings.Tdesired
-# eps_wall = 0.1**settings.kb*settings.Tdesired
+# eps = 0.25 * settings.kb * settings.Tdesired
+# eps_wall = 1.0 * settings.kb * settings.Tdesired
+# for part d
+k_ext = 100
 
 # -------------- EQUILIBRATION ---------------#
 for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
 
-    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z(
+    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z_ext(
         x,
         y,
         z,
@@ -85,6 +87,7 @@ for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
         eps_wall,
         sigma_wall,
         cutoff_wall,
+        k_ext,
     )
 
     if (
@@ -101,6 +104,26 @@ for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
         misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
+
+    # for part d
+    force.forceLJ_wall_z_ext(
+        x,
+        y,
+        z,
+        xlo,
+        xhi,
+        ylo,
+        yhi,
+        zlo,
+        zhi,
+        eps,
+        sigma,
+        cutoff,
+        eps_wall,
+        sigma_wall,
+        cutoff_wall,
+        k_ext,
+    )
 
 fileoutput.close()
 fileenergy.close()
@@ -120,7 +143,7 @@ force_wall = np.zeros(
 
 for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 
-    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z(
+    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z_ext(
         x,
         y,
         z,
@@ -144,6 +167,7 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
         eps_wall,
         sigma_wall,
         cutoff_wall,
+        k_ext,
     )
 
     if step % 10 == 0:  # save the trajectory

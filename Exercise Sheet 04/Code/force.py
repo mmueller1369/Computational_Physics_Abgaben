@@ -229,7 +229,7 @@ def forceLJ_wall_z_ext(
 
         # external force
         fz[i] += fz_ext
-        epot -= fz_ext * z[i]
+        epot += -fz_ext * zi
 
     # for the last particle which isn't included in the loop
     zi = z[-1]
@@ -244,6 +244,7 @@ def forceLJ_wall_z_ext(
         )
         fz[-1] += ff * r_wall
     fz[-1] += fz_ext
+    epot += -fz_ext * zi
 
     return fx, fy, fz, epot
 
