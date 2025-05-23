@@ -11,7 +11,7 @@ import g_r
 
 settings.init()
 # histogramme über gesamte trajektorie
-histogramme_gesamt = np.loadtxt(os.path.join(settings.path, "histogram_z.txt"))
+histogramme_gesamt = np.loadtxt(os.path.join(settings.path, "histogram_z_a.txt"))
 # unterteile in blocks
 block_hist = np.array_split(histogramme_gesamt, settings.nblocks)
 adsorption_values = []
