@@ -47,7 +47,7 @@ def init():
 
     # desired density
     global rho
-    rho = 0.01  # N/V = 0.01 sigma^-3
+    rho = 0.25  # N/V = 0.01 sigma^-3
 
     # box lengths in each direction
     lx = n1 / (rho ** (1 / 3))
@@ -76,7 +76,7 @@ def init():
     Trescale = 1  # 1 = rescale temperature; 0 = no rescaling
 
     global deltar  # bin size for histogram
-    deltar = 0.01 * sigma
+    deltar = 0.05 * sigma
     global rmax  # maximum distance for histogram
     rmax = 1 / 2 * max(lx, ly, lz) * sigma  # should be 1/2 of the box size
     global n_analyze  # every n_analyze steps, the histogram is calculated

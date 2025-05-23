@@ -25,9 +25,9 @@ def InitializeAtoms():
         while ny < settings.n2:
             nz = 0
             while nz < settings.n3:
-                x0 = nx * settings.deltaxyz + settings.deltaxyz / 2.0
-                y0 = ny * settings.deltaxyz + settings.deltaxyz / 2.0
-                z0 = nz * settings.deltaxyz + settings.deltaxyz / 2.0
+                x0 = nx * settings.deltaxyz
+                y0 = ny * settings.deltaxyz
+                z0 = nz * settings.deltaxyz
 
                 vx0 = 0.5 - random.randint(0, 1)
                 vy0 = 0.5 - random.randint(0, 1)
