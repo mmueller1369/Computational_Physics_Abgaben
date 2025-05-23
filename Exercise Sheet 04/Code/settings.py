@@ -13,9 +13,9 @@ import os
 def init():
 
     global nsteps_equi  # number of time step to analyze
-    nsteps_equi = 50000
+    nsteps_equi = 10000  # 50000
     global nsteps_production
-    nsteps_production = 100000
+    nsteps_production = 10000  # 100000
     global mass  # mass of the LJ particles (gram/mole)
     mass = 39.95
     global kb  # boltzmann's constant (kcal/mole/K)
@@ -43,7 +43,9 @@ def init():
     global n2
     n2 = 3
     global n3
-    n3 = 6
+    n3 = 12
+    global nparticles
+    nparticles = n1 * n2 * n3
 
     # desired density
     global rho
