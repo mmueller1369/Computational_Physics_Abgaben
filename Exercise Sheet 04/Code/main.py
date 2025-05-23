@@ -140,7 +140,6 @@ force_wall = np.zeros(
     shape=(2, settings.n_gr, settings.nparticles)
 )  # tracks the force and the corresponding z position
 
-
 for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z_ext(

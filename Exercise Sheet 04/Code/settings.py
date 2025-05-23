@@ -39,9 +39,9 @@ def init():
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 6
+    n1 = 3
     global n2
-    n2 = 6
+    n2 = 3
     global n3
     n3 = 12
     global nparticles
@@ -85,6 +85,10 @@ def init():
     n_analyze = 10
     global n_gr
     n_gr = int(nsteps_production / n_analyze)
+
+    # number of blocks
+    global nblocks
+    nblocks = 6
 
     global path  # path to the output files
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
