@@ -6,3 +6,7 @@
 *.txt
 *.png
 Excersice Sheet 01/output/vel_verlet.dat
+
+!histogram_x.txt
+!histogram_y.txt
+!histogram_z.txt

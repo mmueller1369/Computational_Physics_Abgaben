@@ -104,7 +104,10 @@ fileoutput = open(os.path.join(settings.path, "trajectories_prod"), "w")
 fileenergy = open(os.path.join(settings.path, "energies_prod"), "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
-histogram, bin_width = initialize.histogram()
+histogram_x, bin_width = initialize.histogram_1d(xhi, xlo)
+histogram_y, bin_width = initialize.histogram_1d(yhi, ylo)
+histogram_z, bin_width = initialize.histogram_1d(zhi, zlo)
+
 
 for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 
@@ -142,18 +145,22 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
         )  # calculate v_x^2 to compare with 0.5Nk_BT
         misc.WriteEnergy(fileenergy, step, epot, ekin, vx2, vy2, vz2)
 
-#     # calculate the radial distribution function
-#     if step % settings.n_analyze == 0:
-#         histogram[int(step / settings.n_analyze)] = g_r.histogram(
-#             x, y, z, bin_width, settings.rmax
-#         )
+    # calculate the radial distribution function
+    if step % settings.n_analyze == 0:
+        t = int(step / settings.n_analyze)
+        histogram_x[t] = g_r.histogram_1d(x, xlo, xhi)
+        histogram_y[t] = g_r.histogram_1d(y, ylo, yhi)
+        histogram_z[t] = g_r.histogram_1d(z, zlo, zhi)
 
-# # g_r.plot_histogram(histogram[-1])
-# rdf, [n_b, n_id] = g_r.calc_RDF(histogram, bin_width)
-# g_r.plot_rdf(rdf, bin_width)
-# g_r.plot_histogram(n_b)
-# g_r.plot_histogram(n_id)
 fileoutput.close()
 fileenergy.close()
+
+# rho_x = g_r.calc_density_1d(histogram_x)
+# rho_y = g_r.calc_density_1d(histogram_y)
+# rho_z = g_r.calc_density_1d(histogram_z)
+
+np.savetxt(os.path.join(settings.path, "histogram_x.txt"), histogram_x)
+np.savetxt(os.path.join(settings.path, "histogram_y.txt"), histogram_y)
+np.savetxt(os.path.join(settings.path, "histogram_z.txt"), histogram_z)
 
 print("total time = ", time.time() - start)
