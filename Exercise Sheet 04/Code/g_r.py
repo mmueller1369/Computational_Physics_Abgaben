@@ -95,3 +95,60 @@ def plot_rdf(rdf, bin_width):
 
     np.savetxt(os.path.join(settings.path, "g_r.txt"), rdf)
     np.savetxt(os.path.join(settings.path, "r.txt"), x * settings.sigma)
+
+
+# 1d densities
+
+
+@njit
+def histogram_1d(x, xlo, xhi):
+    rtot = xhi - xlo
+    hist = np.zeros(int(rtot / settings.deltar))
+    for xi in x:
+        xi_mod = xi % rtot + xlo
+        bin_n = int((xi_mod - xlo) / settings.deltar)
+        hist[bin_n] += 1
+    return hist
+
+
+@njit
+def calc_density_1d(histogram):
+    # calculate the average number of atoms in each bin
+    total_bins = histogram.shape[1]
+    nparticles = settings.n1 * settings.n2 * settings.n3
+    histogram_new = np.zeros(total_bins)
+    for i in prange(total_bins):
+        total_atoms = 0
+        for j in prange(histogram.shape[0]):
+            total_atoms += histogram[j][i]
+        histogram_new[i] = total_atoms / settings.n_gr / nparticles * total_bins
+
+    return histogram_new
+
+
+def plot_density_1d(hist, direction):
+    x = np.arange(0, len(hist)) * settings.deltar / settings.sigma
+    # box_length_sigma = settings.xhi / settings.sigma / 2
+    # other_line = np.sqrt(2) * box_length_sigma
+    # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
+    # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
+    plt.title(f"1D density function in {direction} direction")
+    plt.axhline(1, color="y", linestyle="--", label="Asymptote")
+    plt.plot(x, hist, label=rf"$\rho{direction}$")
+    plt.xlabel(r"$r$ [$\sigma$]")
+    plt.ylabel(rf"$\rho({direction})$")
+    plt.legend()
+    # plt.savefig(os.path.join(settings.path, "g_r.png"))
+    plt.show()
+    # evaluate the plot
+    # find max peak
+    # max_id = np.argmax(hist)
+    # print("Max value in RDF is: ", hist[max_id])
+    # print("The value is at position: ", max_id * bin_width / settings.sigma, " r/sigma")
+    # min_id_rel = np.argmin(hist[max_id:])
+    # min_id = max_id + min_id_rel
+    # print("Next minimum after max is: ", hist[min_id])
+    # print("The value is at position: ", min_id * bin_width / settings.sigma, " r/sigma")
+
+    # np.savetxt(os.path.join(settings.path, "g_r.txt"), hist)
+    # np.savetxt(os.path.join(settings.path, "r.txt"), x * settings.sigma)
