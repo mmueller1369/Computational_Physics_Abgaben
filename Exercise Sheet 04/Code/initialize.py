@@ -110,4 +110,4 @@ def block_histograms(zhi, zlo):
     rtot = zhi - zlo
     n_bins = int(rtot / settings.deltar)
     width_bin = rtot / n_bins
-    return np.zeros((settings.block_length, n_bins)), width_bin
+    return np.zeros((settings.nblocks, n_bins)), width_bin

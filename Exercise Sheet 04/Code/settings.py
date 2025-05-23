@@ -39,11 +39,11 @@ def init():
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 6
+    n1 = 3
     global n2
-    n2 = 6
+    n2 = 3
     global n3
-    n3 = 12
+    n3 = 6
 
     # desired density
     global rho
@@ -89,7 +89,7 @@ def init():
     nblocks = 6
     # block length
     global block_length
-    block_length = int(nsteps_production / nblocks)
+    block_length = int(nsteps_production / nblocks / n_analyze)
 
     global path  # path to the output files
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
