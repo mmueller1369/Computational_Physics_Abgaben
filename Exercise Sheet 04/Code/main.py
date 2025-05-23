@@ -155,10 +155,6 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 fileoutput.close()
 fileenergy.close()
 
-# rho_x = g_r.calc_density_1d(histogram_x)
-# rho_y = g_r.calc_density_1d(histogram_y)
-# rho_z = g_r.calc_density_1d(histogram_z)
-
 np.savetxt(os.path.join(settings.path, "histogram_x.txt"), histogram_x)
 np.savetxt(os.path.join(settings.path, "histogram_y.txt"), histogram_y)
 np.savetxt(os.path.join(settings.path, "histogram_z.txt"), histogram_z)

@@ -126,17 +126,17 @@ def calc_density_1d(histogram):
     return histogram_new
 
 
-def plot_density_1d(hist, bin_width, direction):
-    x = np.arange(0, len(hist)) * bin_width / settings.sigma
+def plot_density_1d(hist, direction):
+    x = np.arange(0, len(hist)) * settings.deltar / settings.sigma
     # box_length_sigma = settings.xhi / settings.sigma / 2
     # other_line = np.sqrt(2) * box_length_sigma
     # plt.axvline(other_line, color="g", linestyle="--", label="sqrt(2) * box length")
     # plt.axvline(box_length_sigma, color="r", linestyle="--", label="box length/2")
-    plt.title("1D density function in {direction} direction")
+    plt.title(f"1D density function in {direction} direction")
     plt.axhline(1, color="y", linestyle="--", label="Asymptote")
     plt.plot(x, hist, label=rf"$\rho{direction}$")
     plt.xlabel(r"$r$ [$\sigma$]")
-    plt.ylabel(rf"$\rho{direction}$")
+    plt.ylabel(rf"$\rho({direction})$")
     plt.legend()
     # plt.savefig(os.path.join(settings.path, "g_r.png"))
     plt.show()
