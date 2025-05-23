@@ -152,6 +152,103 @@ def forceLJ_wall_z(
 
 
 @njit(parallel=True)
+def forceLJ_wall_z_ext(
+    x,
+    y,
+    z,
+    xlo,
+    xhi,
+    ylo,
+    yhi,
+    zlo,
+    zhi,
+    eps,
+    sigma,
+    cutoff,
+    eps_wall,
+    sigma_wall,
+    cutoff_wall,
+    k_ext,
+):
+
+    fx = np.zeros(shape=len(x))
+    fy = np.zeros(shape=len(x))
+    fz = np.zeros(shape=len(x))
+    N = len(x)
+
+    i = 0
+    sf2a = sigma * sigma / cutoff / cutoff
+    sf6a = sf2a * sf2a * sf2a
+
+    epotcut = 4.0 * eps * sf6a * (sf6a - 1.0)
+    epot = 0
+
+    lz = zhi - zlo
+    fz_ext = k_ext * eps / sigma
+
+    for i in prange(N - 1):
+        # LJ force
+        for j in prange(i + 1, N):
+            rijx = pbc(x[i], x[j], xlo, xhi)
+            rijy = pbc(y[i], y[j], ylo, yhi)
+            rijz = z[j] - z[i]
+
+            r2 = rijx * rijx + rijy * rijy + rijz * rijz
+            if r2 < cutoff * cutoff:
+                sf2 = sigma * sigma / r2
+                sf6 = sf2 * sf2 * sf2
+                epot += 4.0 * eps * sf6 * (sf6 - 1.0) - epotcut
+                ff = 24.0 * eps * sf6 * (sf6 - 0.5) / r2
+                fx[i] -= ff * rijx
+                fy[i] -= ff * rijy
+                fz[i] -= ff * rijz
+
+                fx[j] += ff * rijx
+                fy[j] += ff * rijy
+                fz[j] += ff * rijz
+
+        # wall force
+        # calculate the closest distance to the wall (including the sign for the direction of the force)
+        zi = z[i]
+        r_wall = zi - (zlo + lz * (zi > lz / 2 + zlo))
+        if abs(r_wall) < cutoff_wall:
+            sf1 = sigma_wall / r_wall
+            sf3 = sf1**3
+            sf3a = abs(sf3)
+            epot += 3.0 * math.sqrt(3.0) / 2 * eps_wall * sf3a * (sf3a**2 - 1.0)
+            ff = (
+                9.0
+                * math.sqrt(3.0)
+                / 2
+                * eps_wall
+                * sf3a
+                * (3 * sf3a**2 - 1.0)
+                / r_wall**2
+            )
+            fz[i] += ff * r_wall
+
+        # external force
+        fz[i] += fz_ext
+        epot -= fz_ext * z[i]
+
+    # for the last particle which isn't included in the loop
+    zi = z[-1]
+    r_wall = zi - (zlo + lz * (zi > lz / 2 + zlo))
+    if abs(r_wall) < cutoff_wall:
+        sf1 = sigma_wall / r_wall
+        sf3 = sf1**3
+        sf3a = abs(sf3)
+        epot += 3.0 * math.sqrt(3.0) / 2 * eps_wall * sf3a * (sf3a**2 - 1.0)
+        ff = (
+            9.0 * math.sqrt(3.0) / 2 * eps_wall * sf3a * (3 * sf3a**2 - 1.0) / r_wall**2
+        )
+        fz[-1] += ff * r_wall
+    fz[-1] += fz_ext
+
+    return fx, fy, fz, epot
+
+
+@njit(parallel=True)
 def measure_force_wall(z, zlo, zhi, eps_wall, sigma_wall, cutoff_wall):
     # calculate the closest distance to the wall (including the sign for the direction of the force)
     force_wall = np.zeros(shape=len(z))
