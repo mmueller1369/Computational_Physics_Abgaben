@@ -32,7 +32,9 @@ plt.savefig(os.path.join(settings.path, "plot_a_xy.png"))
 plt.show()
 
 force_wall = np.loadtxt(os.path.join(settings.path, "force_wall_a.txt"))
+r_wall = np.loadtxt(os.path.join(settings.path, "r_wall_a.txt"))
 
-mean_force = np.mean(np.abs(force_wall))
+force_wall *= np.sign(r_wall)
+mean_force = np.mean(force_wall)
 area = (settings.xhi - settings.xlo) * (settings.yhi - settings.ylo)
 print(f"Mean pressure (g/mole * fs **2): {mean_force/area}")
