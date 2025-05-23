@@ -18,8 +18,8 @@ adsorption_values = []
 
 for i, hist in enumerate(block_hist):
     rho_z = g_r.calc_density_1d(hist)
-    g_r.plot_density_1d(rho_z, "z")
-    adsorption = se.calc_adsorption(rho_z, settings.rho)
+    # g_r.plot_density_1d(rho_z, "z")
+    adsorption = se.calc_adsorption(rho_z)
     print(f"Adsorption: {adsorption}")
     adsorption_values.append(adsorption)
 # calculate statistical error

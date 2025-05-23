@@ -87,9 +87,6 @@ def init():
     # number of blocks
     global nblocks
     nblocks = 6
-    # block length
-    global block_length
-    block_length = int(nsteps_production / nblocks / n_analyze)
 
     global path  # path to the output files
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")

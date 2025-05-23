@@ -108,8 +108,6 @@ histogram_x, bin_width = initialize.histogram_1d(xhi, xlo)
 histogram_y, bin_width = initialize.histogram_1d(yhi, ylo)
 histogram_z, bin_width = initialize.histogram_1d(zhi, zlo)
 
-block_hist, bin_width = initialize.block_histograms(zhi, zlo)
-
 for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 
     x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet_wall_z(
@@ -153,21 +151,11 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
         histogram_y[t] = g_r.histogram_1d(y, ylo, yhi)
         histogram_z[t] = g_r.histogram_1d(z, zlo, zhi)
 
-    # if step % settings.block_length == 0:
-    #    t = int(step / settings.block_length)
-    #    hist = g_r.histogram_1d(z, zlo, zhi)
-    #    block_hist[t] = hist
-    #    # hist = np.array(hist, dtype=np.float64)
-    #    # density_profiles[t] = g_r.calc_density_1d(hist)
-
-
 fileoutput.close()
 fileenergy.close()
 
 np.savetxt(os.path.join(settings.path, "histogram_x.txt"), histogram_x)
 np.savetxt(os.path.join(settings.path, "histogram_y.txt"), histogram_y)
 np.savetxt(os.path.join(settings.path, "histogram_z.txt"), histogram_z)
-# save density profiles for each block
-np.savetxt(os.path.join(settings.path, "block_hist.txt"), block_hist)
 
 print("total time = ", time.time() - start)

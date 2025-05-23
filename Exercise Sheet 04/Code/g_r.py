@@ -126,18 +126,6 @@ def calc_density_1d(histogram):
     return histogram_new
 
 
-# @njit
-# def calc_density_1d_one_hist(hist):
-#    # calculate the average number of atoms in each bin
-#    total_bins = hist.shape[0]
-#    nparticles = settings.n1 * settings.n2 * settings.n3
-#    histogram_new = np.zeros(total_bins)
-#    for i in prange(total_bins):
-#        histogram_new[i] = hist[i] / nparticles * total_bins
-#
-#    return histogram_new
-
-
 def plot_density_1d(hist, direction):
     x = np.arange(0, len(hist)) * settings.deltar / settings.sigma
     # box_length_sigma = settings.xhi / settings.sigma / 2

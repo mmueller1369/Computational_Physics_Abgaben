@@ -10,8 +10,10 @@ Decompose the trajectory of the production run obtained in (a) in 6 blocks of eq
  Calculate and report the corresponding statistical error for Γ
 """
 
+import settings
 
-def calc_adsorption(rho_z, rho_b):
+
+def calc_adsorption(rho_z):
     """
     Calculate the adsorption based on the given parameters.
 
@@ -21,7 +23,8 @@ def calc_adsorption(rho_z, rho_b):
     # summiere halbes array von null bis zur hälfte
     # weil das den Integralgrenzen von zw,1 bis (zw,1 + zw,2)/2 entspricht
     # sollte rho_z ungerade sein, dann wird len()-1/2 genommen
-    adsorption = sum(rho_z[: len(rho_z) // 2] - rho_b)
+    rho_b = rho_z[len(rho_z) // 2 - 50 : len(rho_z) // 2 + 50].mean()
+    adsorption = sum(rho_z[: len(rho_z) // 2] - rho_b) * settings.deltar
     return adsorption
 
 
@@ -35,7 +38,7 @@ def calc_statistical_error(adsorption_values):
     mean = sum(adsorption_values) / len(adsorption_values)
     variance = (
         sum((x - mean) ** 2 for x in adsorption_values)
-        / (len(adsorption_values) - 1)
-        / len(adsorption_values)  # nötig ???
+        / (len(adsorption_values) - 1)  # N-1 im Nenner???
+        / len(adsorption_values)  # N im Nenner ??
     )
     return variance**0.5
