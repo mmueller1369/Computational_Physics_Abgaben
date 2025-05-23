@@ -92,6 +92,7 @@ def forceLJ_wall_z(
 
     epotcut = 4.0 * eps * sf6a * (sf6a - 1.0)
     epot = 0
+    lz = zhi - zlo
 
     for i in prange(N - 1):
         # LJ force
@@ -114,11 +115,10 @@ def forceLJ_wall_z(
                 fy[j] += ff * rijy
                 fz[j] += ff * rijz
 
-        # calculate the closest distance to the wall (including the sign for the direction of the force)
-        lz = zhi - zlo
-        zbox = z[i] % lz
-        r_wall = zbox - (zlo + lz * (zbox > lz / 2 + zlo))
         # wall force
+        # calculate the closest distance to the wall (including the sign for the direction of the force)
+        zi = z[i]
+        r_wall = zi - (zlo + lz * (zi > lz / 2 + zlo))
         if abs(r_wall) < cutoff_wall:
             sf1 = sigma_wall / r_wall
             sf3 = sf1**3
@@ -135,4 +135,44 @@ def forceLJ_wall_z(
             )
             fz[i] += ff * r_wall
 
+    # for the last particle which isn't included in the loop
+    zi = z[-1]
+    r_wall = zi - (zlo + lz * (zi > lz / 2 + zlo))
+    if abs(r_wall) < cutoff_wall:
+        sf1 = sigma_wall / r_wall
+        sf3 = sf1**3
+        sf3a = abs(sf3)
+        epot += 3.0 * math.sqrt(3.0) / 2 * eps_wall * sf3a * (sf3a**2 - 1.0)
+        ff = (
+            9.0 * math.sqrt(3.0) / 2 * eps_wall * sf3a * (3 * sf3a**2 - 1.0) / r_wall**2
+        )
+        fz[-1] += ff * r_wall
+
     return fx, fy, fz, epot
+
+
+@njit(parallel=True)
+def measure_force_wall(z, zlo, zhi, eps_wall, sigma_wall, cutoff_wall):
+    # calculate the closest distance to the wall (including the sign for the direction of the force)
+    force_wall = np.zeros(shape=len(z))
+    lz = zhi - zlo
+    rwalls = np.zeros(shape=len(z))
+    for i in prange(len(z)):
+        zi = z[i]
+        r_wall = zi - (zlo + lz * (zi > lz / 2 + zlo))
+        rwalls[i] = r_wall
+        # wall force
+        if abs(r_wall) < cutoff_wall:
+            sf1 = sigma_wall / r_wall
+            sf3 = sf1**3
+            sf3a = abs(sf3)
+            force_wall[i] = (
+                9.0
+                * math.sqrt(3.0)
+                / 2
+                * eps_wall
+                * sf3a
+                * (3 * sf3a**2 - 1.0)
+                / r_wall
+            )
+    return force_wall, rwalls

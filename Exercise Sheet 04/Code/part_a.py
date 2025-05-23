@@ -14,9 +14,12 @@ rho_x = g_r.calc_density_1d(histogram_x)
 rho_y = g_r.calc_density_1d(histogram_y)
 rho_z = g_r.calc_density_1d(histogram_z)
 
-plt.plot(rho_x)
-plt.show()
+# g_r.plot_density_1d(rho_x, "x")
+# g_r.plot_density_1d(rho_y, "y")
+# g_r.plot_density_1d(rho_z, "z")
 
-g_r.plot_density_1d(rho_x, "x")
-g_r.plot_density_1d(rho_y, "y")
-g_r.plot_density_1d(rho_z, "z")
+force_wall = np.loadtxt(os.path.join(settings.path, "force_wall.txt"))
+
+mean_force = np.mean(np.abs(force_wall))
+area = (settings.xhi - settings.xlo) * (settings.yhi - settings.ylo)
+print(f"Mean pressure: {mean_force/area}")

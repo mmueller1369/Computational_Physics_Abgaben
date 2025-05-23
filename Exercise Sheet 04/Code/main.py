@@ -14,13 +14,14 @@ import numpy as np
 import g_r
 from tqdm import tqdm
 import os
+import force
 
 start = time.time()
 
 # initialization of global variable
 settings.init()
-fileoutput = open(os.path.join(settings.path, "trajectories_eq"), "w")
-fileenergy = open(os.path.join(settings.path, "energies_eq"), "w")
+fileoutput = open(os.path.join(settings.path, "trajectories_eq.txt"), "w")
+fileenergy = open(os.path.join(settings.path, "energies_eq.txt"), "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
@@ -100,13 +101,16 @@ fileoutput.close()
 fileenergy.close()
 
 # -------------- PRODUCTION ---------------#
-fileoutput = open(os.path.join(settings.path, "trajectories_prod"), "w")
-fileenergy = open(os.path.join(settings.path, "energies_prod"), "w")
+fileoutput = open(os.path.join(settings.path, "trajectories_prod.txt"), "w")
+fileenergy = open(os.path.join(settings.path, "energies_prod.txt"), "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 histogram_x, bin_width = initialize.histogram_1d(xhi, xlo)
 histogram_y, bin_width = initialize.histogram_1d(yhi, ylo)
 histogram_z, bin_width = initialize.histogram_1d(zhi, zlo)
+force_wall = np.zeros(
+    shape=(2, settings.n_gr, settings.nparticles)
+)  # tracks the force and the corresponding z position
 
 
 for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
@@ -151,6 +155,10 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
         histogram_x[t] = g_r.histogram_1d(x, xlo, xhi)
         histogram_y[t] = g_r.histogram_1d(y, ylo, yhi)
         histogram_z[t] = g_r.histogram_1d(z, zlo, zhi)
+        force_wall[:, t, :] = force.measure_force_wall(
+            z, zlo, zhi, eps_wall, sigma_wall, cutoff_wall
+        )
+
 
 fileoutput.close()
 fileenergy.close()
@@ -158,5 +166,7 @@ fileenergy.close()
 np.savetxt(os.path.join(settings.path, "histogram_x.txt"), histogram_x)
 np.savetxt(os.path.join(settings.path, "histogram_y.txt"), histogram_y)
 np.savetxt(os.path.join(settings.path, "histogram_z.txt"), histogram_z)
+np.savetxt(os.path.join(settings.path, "force_wall.txt"), force_wall[0])
+np.savetxt(os.path.join(settings.path, "r_wall.txt"), force_wall[1])
 
 print("total time = ", time.time() - start)
