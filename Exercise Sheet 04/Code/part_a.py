@@ -22,4 +22,4 @@ force_wall = np.loadtxt(os.path.join(settings.path, "force_wall.txt"))
 
 mean_force = np.mean(np.abs(force_wall))
 area = (settings.xhi - settings.xlo) * (settings.yhi - settings.ylo)
-print(f"Mean pressure: {mean_force/area}")
+print(f"Mean pressure (g/mole * fs **2): {mean_force/area}")
