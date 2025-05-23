@@ -17,11 +17,12 @@ import os
 import force
 
 start = time.time()
+part = "a"
 
 # initialization of global variable
 settings.init()
-fileoutput = open(os.path.join(settings.path, "trajectories_eq.txt"), "w")
-fileenergy = open(os.path.join(settings.path, "energies_eq.txt"), "w")
+fileoutput = open(os.path.join(settings.path, f"trajectories_eq_{part}.txt"), "w")
+fileenergy = open(os.path.join(settings.path, f"energies_eq_{part}.txt"), "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
@@ -52,6 +53,10 @@ misc.WriteTrajectory(
 fx, fy, fz, epot = force.forceLJ(
     x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff
 )
+
+# for part c
+# eps = 0.25**settings.kb*settings.Tdesired
+# eps_wall = 0.1**settings.kb*settings.Tdesired
 
 # -------------- EQUILIBRATION ---------------#
 for step in tqdm(range(0, settings.nsteps_equi), desc="Equalibration"):
@@ -101,8 +106,8 @@ fileoutput.close()
 fileenergy.close()
 
 # -------------- PRODUCTION ---------------#
-fileoutput = open(os.path.join(settings.path, "trajectories_prod.txt"), "w")
-fileenergy = open(os.path.join(settings.path, "energies_prod.txt"), "w")
+fileoutput = open(os.path.join(settings.path, f"trajectories_prod_{part}.txt"), "w")
+fileenergy = open(os.path.join(settings.path, f"energies_prod_{part}.txt"), "w")
 fileenergy.write("#step  PE  KE  vx2 vy2 vz2\n")
 settings.Trescale = 0
 histogram_x, bin_width = initialize.histogram_1d(xhi, xlo)
@@ -163,10 +168,10 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Production"):
 fileoutput.close()
 fileenergy.close()
 
-np.savetxt(os.path.join(settings.path, "histogram_x.txt"), histogram_x)
-np.savetxt(os.path.join(settings.path, "histogram_y.txt"), histogram_y)
-np.savetxt(os.path.join(settings.path, "histogram_z.txt"), histogram_z)
-np.savetxt(os.path.join(settings.path, "force_wall.txt"), force_wall[0])
-np.savetxt(os.path.join(settings.path, "r_wall.txt"), force_wall[1])
+np.savetxt(os.path.join(settings.path, f"histogram_x_{part}.txt"), histogram_x)
+np.savetxt(os.path.join(settings.path, f"histogram_y_{part}.txt"), histogram_y)
+np.savetxt(os.path.join(settings.path, f"histogram_z_{part}.txt"), histogram_z)
+np.savetxt(os.path.join(settings.path, f"force_wall_{part}.txt"), force_wall[0])
+np.savetxt(os.path.join(settings.path, f"r_wall_{part}.txt"), force_wall[1])
 
 print("total time = ", time.time() - start)
