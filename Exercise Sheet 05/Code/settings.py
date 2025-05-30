@@ -76,7 +76,7 @@ def init():
     # rescaling of temperature
     global thermostat
     thermostat = (
-        0  # 1 = rescale temperature; 0 = no rescaling, 2 = berendsen, 3 = andersen
+        2  # 1 = rescale temperature; 0 = no rescaling, 2 = berendsen, 3 = andersen
     )
     global tau
     tau = 5000 * deltat
