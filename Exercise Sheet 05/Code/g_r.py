@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import settings
 import os
-from force import pbc
+from forces import pbc
 from numba import njit, prange
 import os
 

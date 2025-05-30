@@ -54,7 +54,7 @@ def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
         )
 
 
-def inputset():
+def paramsLJ():
     return (
         settings.xlo,
         settings.xhi,
@@ -65,8 +65,6 @@ def inputset():
         settings.eps,
         settings.sigma,
         settings.cutoff,
-        settings.deltat,
-        settings.mass,
     )
 
 
