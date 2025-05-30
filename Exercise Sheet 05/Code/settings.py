@@ -13,9 +13,9 @@ import os
 def init():
 
     global nsteps_equi  # number of time step to analyze
-    nsteps_equi = 10000  # 50000
+    nsteps_equi = 40000
     global nsteps_production
-    nsteps_production = 80000  # 100000
+    nsteps_production = 40000
     global mass  # mass of the LJ particles (gram/mole)
     mass = 39.95
     global kb  # boltzmann's constant (kcal/mole/K)
@@ -79,7 +79,7 @@ def init():
         2  # 1 = rescale temperature; 0 = no rescaling, 2 = berendsen, 3 = andersen
     )
     global tau
-    tau = 5000 * deltat
+    tau = 500 * deltat
     global n_thermostat
     n_thermostat = 1
 

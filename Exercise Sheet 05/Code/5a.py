@@ -20,7 +20,7 @@ start = time.time()
 settings.init()
 fileoutput = open(os.path.join(settings.path, f"trajectories_a.txt"), "w")
 filetemp = open(os.path.join(settings.path, f"temp_a.txt"), "w")
-filetemp.write("#step  PE  KE  vx2 vy2 vz2\n")
+filetemp.write("#step  T\n")
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
 x, y, z, vx, vy, vz = initialize.InitializeAtoms()
