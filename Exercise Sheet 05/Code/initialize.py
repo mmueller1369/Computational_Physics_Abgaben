@@ -100,6 +100,22 @@ def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
     return vx, vy, vz
 
 
+def anderson_thermostat(velocities, nu, T0, dt):
+    """_summary_
+
+    Args:
+        velocities (_type_): _description_
+        nu (_type_): collision frequency in fs^-1
+        T0 (_type_): _description_
+        dt (_type_): _description_
+    """
+    variance = np.sqrt(settings.kb * T0 / settings.mass)
+    for i, _ in enumerate(velocities):
+        if random.random() < nu * dt:
+            velocities[i] = np.random.normal(0, variance, 3)  # 3d veloctiy
+    return velocities
+
+
 def histogram():
     n_bins = int(settings.rmax / settings.deltar)
     # dann folgt damit für die bin_breite
