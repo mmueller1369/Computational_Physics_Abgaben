@@ -100,7 +100,7 @@ def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
     return vx, vy, vz
 
 
-def anderson_thermostat(velocities, nu, T0, dt):
+def anderson_thermostat(vx, vy, vz, nu, T0, dt):
     """_summary_
 
     Args:
@@ -109,11 +109,17 @@ def anderson_thermostat(velocities, nu, T0, dt):
         T0 (_type_): _description_
         dt (_type_): _description_
     """
-    variance = np.sqrt(settings.kb * T0 / settings.mass)
-    for i, _ in enumerate(velocities):
+    kb_J = settings.kb * 4184
+    NA = 6.02214076e23  # Avogadro's number
+    mass_kg = settings.mass / (1000 * NA)
+    # variance in new units
+    variance = np.sqrt(kb_J * T0 / mass_kg)
+    for i, _ in enumerate(vx):
         if random.random() < nu * dt:
-            velocities[i] = np.random.normal(0, variance, 3)  # 3d veloctiy
-    return velocities
+            vx[i] = np.random.normal(0, variance, 1)
+            vy[i] = np.random.normal(0, variance, 1)
+            vz[i] = np.random.normal(0, variance, 1)
+    return vx, vy, vz
 
 
 def histogram():

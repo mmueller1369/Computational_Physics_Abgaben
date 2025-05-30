@@ -39,11 +39,11 @@ def init():
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 10
+    n1 = 3
     global n2
-    n2 = 10
+    n2 = 3
     global n3
-    n3 = 10
+    n3 = 3
     global nparticles
     nparticles = n1 * n2 * n3
 
@@ -76,12 +76,14 @@ def init():
     # rescaling of temperature
     global thermostat
     thermostat = (
-        0  # 1 = rescale temperature; 0 = no rescaling, 2 = berendsen, 3 = andersen
+        3  # 1 = rescale temperature; 0 = no rescaling, 2 = berendsen, 3 = andersen
     )
     global tau
     tau = 5000 * deltat
     global n_thermostat
     n_thermostat = 1
+    global nu  # collision frequency for Andersen thermostat
+    nu = 0.01  # in fs^-1
 
     global deltar  # bin size for histogram
     deltar = 0.05 * sigma

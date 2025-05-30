@@ -80,7 +80,12 @@ for step in tqdm(range(0, settings.nsteps_production), desc="Simulation"):
         vx, vy, vz = initialize.berendsen_thermostat(
             vx, vy, vz, settings.Tdesired, Trandom, settings.tau, settings.deltat
         )
-        Trandom1 = initialize.temperature(vx, vy, vz)
+    if (
+        settings.thermostat == 3 and step % settings.n_thermostat == 0
+    ):  # rescaling of the temperatur
+        vx, vy, vz = initialize.anderson_thermostat(
+            vx, vy, vz, settings.nu, settings.Tdesired, settings.deltat
+        )
 
     if step % settings.n_save == 0:  # save the trajectory
         ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
