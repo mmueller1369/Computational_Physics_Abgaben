@@ -100,6 +100,18 @@ def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
     return vx, vy, vz
 
 
+def andersen_thermostat(vx, vy, vz, T0, Tsystem, nu, dt):
+    # Tsystem just needed for generalization ("Guter Pfusch ist keine schlechte Arbeit")
+    convunits = 238845.9 * 3 / 2
+    variance = np.sqrt(settings.kb * T0 / settings.mass / convunits)
+    for i, _ in enumerate(vx):
+        if np.random.rand() < nu * dt:
+            vx[i] = np.random.normal(0, variance)
+            vy[i] = np.random.normal(0, variance)
+            vz[i] = np.random.normal(0, variance)
+    return vx, vy, vz
+
+
 def histogram():
     n_bins = int(settings.rmax / settings.deltar)
     # dann folgt damit für die bin_breite
