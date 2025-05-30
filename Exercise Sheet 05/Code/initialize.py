@@ -109,17 +109,20 @@ def anderson_thermostat(vx, vy, vz, nu, T0, dt):
         T0 (_type_): _description_
         dt (_type_): _description_
     """
-    kb_J = settings.kb * 4184
-    NA = 6.02214076e23  # Avogadro's number
-    mass_kg = settings.mass / (1000 * NA)
-    # variance in new units
-    variance = np.sqrt(kb_J * T0 / mass_kg)
+    convunits = 238845.9
+    variance = np.sqrt(settings.kb * T0 / settings.mass / convunits)
     for i, _ in enumerate(vx):
-        if random.random() < nu * dt:
-            vx[i] = np.random.normal(0, variance, 1)
-            vy[i] = np.random.normal(0, variance, 1)
-            vz[i] = np.random.normal(0, variance, 1)
+        if np.random.rand() < nu * dt:
+            vx[i] = np.random.normal(0, variance)
+            vy[i] = np.random.normal(0, variance)
+            vz[i] = np.random.normal(0, variance)
     return vx, vy, vz
+
+
+def anderson_verteilung(v, T0):
+    return np.sqrt(settings.mass / 2 / math.pi / settings.kb / T0) * np.exp(
+        -settings.mass * v**2 / 2 / settings.kb / T0
+    )
 
 
 def histogram():

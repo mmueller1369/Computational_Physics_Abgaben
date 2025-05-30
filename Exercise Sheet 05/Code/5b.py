@@ -1,0 +1,113 @@
+# simulation and analysis of part a
+
+import settings
+import initialize
+import force
+import update
+import time
+import misc
+import numpy as np
+from tqdm import tqdm
+import os
+import force
+
+
+# -------------- Simulation ---------------#
+start = time.time()
+
+# initialization of global variable
+settings.init()
+fileoutput = open(os.path.join(settings.path, f"trajectories_a.txt"), "w")
+filetemp = open(os.path.join(settings.path, f"temp_b.txt"), "w")
+filetemp.write("#step Temp\n")
+
+# create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
+x, y, z, vx, vy, vz = initialize.InitializeAtoms()
+f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+# save configuration to visualize
+misc.WriteTrajectory(
+    fileoutput, 0, x, y, z, vx, vy, vz, f_initial, f_initial, f_initial
+)
+
+# initialize the forces
+(xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff, deltat, mass) = misc.inputset()
+fx, fy, fz, epot = force.forceLJ(
+    x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff
+)
+eps = 0.5 * settings.kb * settings.Tdesired
+settings.nsteps_production = 80000
+
+for step in tqdm(range(0, settings.nsteps_production), desc="Simulation"):
+
+    if step == 40000:
+        settings.Tdesired = 100
+        eps = 0.5 * settings.kb * settings.Tdesired
+
+    x, y, z, vx, vy, vz, fx, fy, fz, epot = update.VelocityVerlet(
+        x,
+        y,
+        z,
+        vx,
+        vy,
+        vz,
+        fx,
+        fy,
+        fz,
+        xlo,
+        xhi,
+        ylo,
+        yhi,
+        zlo,
+        zhi,
+        eps,
+        sigma,
+        cutoff,
+        deltat,
+        mass,
+    )
+
+    if (
+        settings.thermostat == 1 and step % settings.n_thermostat == 0
+    ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
+        Trandom = initialize.temperature(vx, vy, vz)
+        vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
+        Trandom1 = initialize.temperature(vx, vy, vz)
+
+    if (
+        settings.thermostat == 2 and step % settings.n_thermostat == 0
+    ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
+        Trandom = initialize.temperature(vx, vy, vz)
+        vx, vy, vz = initialize.berendsen_thermostat(
+            vx, vy, vz, settings.Tdesired, Trandom, settings.tau, settings.deltat
+        )
+    if (
+        settings.thermostat == 3 and step % settings.n_thermostat == 0
+    ):  # rescaling of the temperatur
+        vx, vy, vz = initialize.anderson_thermostat(
+            vx, vy, vz, settings.nu, settings.Tdesired, settings.deltat
+        )
+
+    if step % settings.n_save == 0:  # save the trajectory
+        ekin = update.KineticEnergy(vx, vy, vz, mass)  # calculate the kinetic energy
+        misc.WriteTemp(filetemp, step, vx, vy, vz)
+        misc.WriteTrajectory(fileoutput, step, x, y, z, vx, vy, vz, fx, fy, fz)
+
+    force.forceLJ(
+        x,
+        y,
+        z,
+        xlo,
+        xhi,
+        ylo,
+        yhi,
+        zlo,
+        zhi,
+        eps,
+        sigma,
+        cutoff,
+    )
+
+fileoutput.close()
+filetemp.close()
+
+print("total time = ", time.time() - start)
