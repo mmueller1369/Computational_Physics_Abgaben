@@ -9,6 +9,7 @@ f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
 initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
 
 # ----------------- Part a ----------------- #
+settings.tau = 5000 * settings.deltat
 settings.Tdesired = 300
 settings.eps = 0.5 * settings.kb * settings.Tdesired
 config_1 = execute.run_simulation(
@@ -47,6 +48,7 @@ config_2 = execute.run_simulation(
 
 
 # ----------------- Part c+d ----------------- #
+settings.tau = 500 * settings.deltat
 settings.Tdesired = 300
 settings.eps = 0.5 * settings.kb * settings.Tdesired
 equilibrated_config = execute.run_simulation(
