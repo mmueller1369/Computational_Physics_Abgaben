@@ -2,11 +2,17 @@ import settings
 import numpy as np
 import math
 import sys
+import initialize
 
 
 def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2, vz2):
 
     fileenergy.write("%i %e %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2, vz2))
+
+
+def WriteTemp(filetemp, itime, vx, vy, vz):
+    temp = initialize.temperature(vx, vy, vz)
+    filetemp.write("%i %e\n" % (itime, temp))
 
 
 def WriteGr(filegr, itime, hist):
@@ -61,9 +67,6 @@ def inputset():
         settings.cutoff,
         settings.deltat,
         settings.mass,
-        settings.eps_wall,
-        settings.sigma_wall,
-        settings.cutoff_wall,
     )
 
 
