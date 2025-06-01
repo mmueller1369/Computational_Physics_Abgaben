@@ -5,7 +5,7 @@ import settings
 
 settings.init()
 
-part_a = np.loadtxt(os.path.join(settings.path, "temp_b.txt"))
+part_a = np.loadtxt(os.path.join(settings.path, "temp_b_nu0.txt"))
 time = part_a[:, 0]
 temp = part_a[:, 1]
 
