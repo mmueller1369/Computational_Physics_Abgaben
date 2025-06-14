@@ -6,7 +6,6 @@ import settings
 import initialize
 import force
 import update
-import debug
 import sys
 import time
 import misc
