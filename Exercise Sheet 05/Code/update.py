@@ -9,7 +9,7 @@ conversion factor:
 """
 
 import settings
-import force
+import forces
 import numpy as np
 from numba import njit, prange
 
@@ -59,7 +59,7 @@ def VelocityVerlet(
     fy0 = fy
     fz0 = fz
     # update acceleration at t+dt
-    fx, fy, fz, epot = force.forceLJ(
+    fx, fy, fz, epot = forces.forceLJ(
         x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff
     )
 
@@ -119,7 +119,7 @@ def VelocityVerlet_wall_z(
     fy0 = fy
     fz0 = fz
     # update acceleration at t+dt
-    fx, fy, fz, epot = force.forceLJ_wall_z(
+    fx, fy, fz, epot = forces.forceLJ_wall_z(
         x,
         y,
         z,
@@ -194,7 +194,7 @@ def VelocityVerlet_wall_z_ext(
     fy0 = fy
     fz0 = fz
     # update acceleration at t+dt
-    fx, fy, fz, epot = force.forceLJ_wall_z_ext(
+    fx, fy, fz, epot = forces.forceLJ_wall_z_ext(
         x,
         y,
         z,

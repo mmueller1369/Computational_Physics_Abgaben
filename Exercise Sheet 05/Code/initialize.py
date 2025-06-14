@@ -1,7 +1,6 @@
 import settings
 import random
 import math
-import debug
 import numpy as np
 from tqdm import tqdm
 
@@ -90,6 +89,31 @@ def rescalevelocity(vx, vy, vz, T1, T2):
     vy = vy * math.sqrt(T1 / T2)
     vz = vz * math.sqrt(T1 / T2)
     return vx, vy, vz
+
+
+def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
+
+    multiplier = math.sqrt(1 + (dt / tau) * ((T1 / T2) - 1))
+    vx = vx * multiplier
+    vy = vy * multiplier
+    vz = vz * multiplier
+    return vx, vy, vz
+
+
+def anderson_thermostat(velocities, nu, T0, dt):
+    """_summary_
+
+    Args:
+        velocities (_type_): _description_
+        nu (_type_): collision frequency in fs^-1
+        T0 (_type_): _description_
+        dt (_type_): _description_
+    """
+    variance = np.sqrt(settings.kb * T0 / settings.mass)
+    for i, _ in enumerate(velocities):
+        if random.random() < nu * dt:
+            velocities[i] = np.random.normal(0, variance, 3)  # 3d veloctiy
+    return velocities
 
 
 def histogram():
