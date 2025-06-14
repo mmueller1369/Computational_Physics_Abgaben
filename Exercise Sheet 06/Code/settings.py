@@ -52,8 +52,11 @@ def init():
     rho = 0.05  # N/V = 0.01 sigma^-3
 
     # box lengths in each direction
+    global lx
     lx = n1 / (rho ** (1 / 3))
+    global ly
     ly = n2 / (rho ** (1 / 3))
+    global lz
     lz = n3 / (rho ** (1 / 3))
 
     # box size

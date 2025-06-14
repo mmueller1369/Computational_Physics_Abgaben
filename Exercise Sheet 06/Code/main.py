@@ -3,12 +3,10 @@ import settings
 import initialize
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import os
 
 settings.init()
-x, y, z, vx, vy, vz = initialize.InitializeAtoms()
-f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
-initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
 
 
 # ----------------- Part a ----------------- #
@@ -56,39 +54,42 @@ plt.show()
 
 
 # ----------------- Part b ----------------- #
-equilibrated_config = execute.run_simulation(
-    initial_config=initial_config,
-    integrator="VelocityVerlet",
-    force="LJ",
-    steps=settings.nsteps_equi,
-    thermostat="andersen_thermostat",
-    thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
-    n_thermostat=1,
-    trajfile=False,
-    tempfile=False,
-    energyfile=False,
-    pressfile=False,
-    rdffile=False,
-    n_save=10,
-    simulation_name="Equilibration part b",
-)
+# x, y, z, vx, vy, vz = initialize.InitializeAtoms()
+# f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+# initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
+# equilibrated_config = execute.run_simulation(
+#     initial_config=initial_config,
+#     integrator="VelocityVerlet",
+#     force="LJ",
+#     steps=settings.nsteps_equi,
+#     thermostat="andersen_thermostat",
+#     thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+#     n_thermostat=1,
+#     trajfile=False,
+#     tempfile=False,
+#     energyfile=False,
+#     pressfile=False,
+#     rdffile=False,
+#     n_save=10,
+#     simulation_name="Equilibration part b",
+# )
 
-final_config = execute.run_simulation(
-    initial_config=equilibrated_config,
-    integrator="VelocityVerlet",
-    force="LJ",
-    steps=settings.nsteps_production,
-    thermostat="andersen_thermostat",
-    thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
-    n_thermostat=1,
-    trajfile=False,
-    tempfile="b_temp",
-    energyfile=False,
-    pressfile="b_press",
-    rdffile="b_gr",
-    n_save=10,
-    simulation_name="Production part b",
-)
+# final_config = execute.run_simulation(
+#     initial_config=equilibrated_config,
+#     integrator="VelocityVerlet",
+#     force="LJ",
+#     steps=settings.nsteps_production,
+#     thermostat="andersen_thermostat",
+#     thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+#     n_thermostat=1,
+#     trajfile=False,
+#     tempfile="b_temp",
+#     energyfile=False,
+#     pressfile="b_press",
+#     rdffile="b_gr",
+#     n_save=10,
+#     simulation_name="Production part b",
+# )
 
 b_temp = np.loadtxt(os.path.join(settings.path, "b_temp.txt"))[:, 1]
 b_press = np.loadtxt(os.path.join(settings.path, "b_press.txt"))[:, 1]
@@ -118,22 +119,104 @@ plt.grid()
 plt.savefig(os.path.join(settings.path, "b_g.png"), bbox_inches="tight", dpi=300)
 plt.show()
 
-num_blocks = 5
-block_size = len(b_press) // num_blocks
-block_means = np.zeros(num_blocks)
-for i in range(num_blocks):
-    start = i * block_size
-    if i < num_blocks - 1:
-        end = (i + 1) * block_size
-    else:
-        end = len(b_press)
-    block_means[i] = np.mean(b_press[start:end])
+
+def blog_averages(data, num_blocks):
+    num_blocks = 5
+    block_size = len(data) // num_blocks
+    block_means = np.zeros(num_blocks)
+    for i in range(num_blocks):
+        start = i * block_size
+        if i < num_blocks - 1:
+            end = (i + 1) * block_size
+        else:
+            end = len(data)
+        block_means[i] = np.mean(data[start:end])
+    mean = np.mean(block_means)
+    error = np.std(block_means, ddof=1) / np.sqrt(num_blocks)
+    return block_means, mean, error
+
+
+block_means, P_mean, P_error = blog_averages(b_press, 5)
+
+
 print(f"b: iii: mean values for each block: {block_means}")
-P_mean = np.mean(block_means)
-P_error = np.std(block_means, ddof=1) / np.sqrt(num_blocks)
 print(f"b: iv: P_mean: {P_mean:.4f}")
 print(f"b: iv: P_error: {P_error:.4f}")
 rho = settings.rho / sigma**3
 B2_sys = B2(beta, settings.eps, sigma)
 P_B2 = 1 / beta * rho + 1 / beta * B2_sys * rho**2
 print(f"b: v: P_B2: {P_B2:.4f}")
+
+
+# ----------------- Part c ----------------- #
+rhos = np.logspace(np.log10(0.05), np.log10(0.25), 7)
+colors = mpl.cm.viridis(np.linspace(0, 1, len(rhos)))
+for r in rhos:
+    hi = settings.n1 / (r ** (1 / 3))
+    settings.xhi = hi * settings.sigma
+    settings.yhi = hi * settings.sigma
+    settings.zhi = hi * settings.sigma
+    settings.deltaxyz = hi * settings.sigma / settings.n1
+    x, y, z, vx, vy, vz = initialize.InitializeAtoms()
+    f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+    initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
+    equilibrated_config = execute.run_simulation(
+        initial_config=initial_config,
+        integrator="VelocityVerlet",
+        force="LJ",
+        steps=settings.nsteps_equi,
+        thermostat="andersen_thermostat",
+        thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+        n_thermostat=1,
+        trajfile=False,
+        tempfile=False,
+        energyfile=False,
+        pressfile=False,
+        rdffile=False,
+        n_save=10,
+        simulation_name=f"Equilibration part c, rho = {r:.3f}",
+    )
+
+    final_config = execute.run_simulation(
+        initial_config=equilibrated_config,
+        integrator="VelocityVerlet",
+        force="LJ",
+        steps=settings.nsteps_production,
+        thermostat="andersen_thermostat",
+        thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+        n_thermostat=1,
+        trajfile=False,
+        tempfile=False,
+        energyfile=False,
+        pressfile=f"c_press_rho={r:.3f}",
+        rdffile=f"c_gr_rho={r:.3f}",
+        n_save=10,
+        simulation_name=f"Production part c, rho = {r:.3f}",
+    )
+
+
+P_mean, P_error = np.zeros(len(rhos)), np.zeros(len(rhos))
+for i, r in enumerate(rhos):
+    press = np.loadtxt(os.path.join(settings.path, f"c_press_rho={r:.3f}.txt"))[:, 1]
+    block_means, mean, error = blog_averages(press, 5)
+    P_mean[i] = mean
+    P_error[i] = error
+
+plt.figure(figsize=(7, 5))
+plt.errorbar(rhos, P_mean, P_error, capsize=3)
+plt.xlabel(r"$\rho$")
+plt.ylabel(r"$P$ [$\mathrm{g/mole}\cdot\mathrm{nm}^{-1}\cdot\mathrm{fs}^{-2}$]")
+plt.grid()
+plt.savefig(os.path.join(settings.path, "c_P.png"), bbox_inches="tight", dpi=300)
+plt.show()
+
+plt.figure(figsize=(7, 5))
+for r, color in zip(rhos, colors):
+    dist = np.loadtxt(os.path.join(settings.path, f"c_gr_rho={r:.3f}.txt"))[:, 0]
+    g = np.loadtxt(os.path.join(settings.path, f"c_gr_rho={r:.3f}.txt"))[:, 1]
+    plt.plot(dist, g, color=color)
+plt.xlabel(r"$r / \sigma$")
+plt.ylabel(r"$g(r)$")
+plt.grid()
+plt.savefig(os.path.join(settings.path, "c_g.png"), bbox_inches="tight", dpi=300)
+plt.show()
