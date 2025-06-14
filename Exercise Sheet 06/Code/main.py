@@ -2,11 +2,58 @@ import execute
 import settings
 import initialize
 import numpy as np
+import matplotlib.pyplot as plt
 
 settings.init()
-x, y, z, vx, vy, vz = initialize.InitializeAtoms()
-f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
-initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
+
+
+# ----------------- Part a ----------------- #
+def B2(beta, eps, sigma, cutoff):
+    def potentialLJ(r, eps, sigma, cutoff):
+        sf6a = (sigma / cutoff) ** 6
+        epotcut = 4.0 * eps * sf6a * (sf6a - 1.0)
+        mask = (r < cutoff) & (r > 0)
+        sf6 = np.zeros_like(r)
+        sf6[mask] = (sigma / r[mask]) ** 6
+        epot = np.zeros_like(r)
+        epot[mask] = 4.0 * eps * sf6[mask] * (sf6[mask] - 1.0) - epotcut
+        return epot
+
+    deltar = cutoff / 1000
+    r = np.arange(0, cutoff, deltar)
+    U = potentialLJ(r, eps, sigma, cutoff)
+    integral_core = np.exp(-beta * U) - 1
+    integral_core *= 4 * np.pi * r**2  # conversion into spherical coordinates
+    integral = -1 / 2 * np.sum(integral_core) * deltar
+    return integral
+
+
+beta = 1 / (settings.Tdesired * settings.kb)
+sigma, cutoff = settings.sigma, 2.5 * settings.sigma
+print(
+    "For our parameter set: B2/eps =",
+    B2(
+        beta,
+        1,  # set to unity
+        sigma,
+        cutoff,
+    ),
+)
+
+epss = np.linspace(0, 1, 1000) / beta
+B2_eps = [B2(beta, eps, sigma, cutoff) / sigma**3 for eps in epss]
+
+plt.figure()
+plt.plot(epss * beta, B2_eps)
+plt.xlabel(r"$\epsilon\beta$")
+plt.ylabel(r"$B_2/\sigma^3$")
+plt.grid(True)
+plt.show()
+
+
+# x, y, z, vx, vy, vz = initialize.InitializeAtoms()
+# f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+# initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
 """
 # ----------------- Part a ----------------- #
 settings.tau = 5000 * settings.deltat
@@ -121,7 +168,6 @@ final_config = execute.run_simulation(
     n_save=10,
     simulation_name="Production",
 )
-"""
 
 # ----------------- Part e ----------------- #
 settings.tau = 500 * settings.deltat
@@ -158,3 +204,4 @@ final_config = execute.run_simulation(
     n_save=10,
     simulation_name="Production",
 )
+"""
