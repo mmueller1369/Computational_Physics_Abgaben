@@ -235,3 +235,42 @@ def KineticEnergy(vx, vy, vz, mass):
             0.5 * mass * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]) * convvelocity
         )
     return ekin
+
+
+@njit(parallel=True)
+def virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
+    i = 0
+    N = len(x)
+    vir = 0
+    for i in prange(N - 1):
+        j = i + 1
+        for j in prange(i + 1, N):
+            rijx = forces.pbc(x[i], x[j], xlo, xhi)
+            rijy = forces.pbc(y[i], y[j], ylo, yhi)
+            rijz = forces.pbc(z[i], z[j], zlo, zhi)
+
+            r2 = rijx * rijx + rijy * rijy + rijz * rijz
+            # calculate fx, fy, fz
+            if r2 < cutoff * cutoff:
+                sf2 = sigma * sigma / r2
+                sf6 = sf2 * sf2 * sf2
+                ff = 24.0 * eps * sf6 * (sf6 - 0.5) / r2
+                fx -= ff * rijx
+                fy -= ff * rijy
+                fz -= ff * rijz
+            else:
+                fx, fy, fz = 0, 0, 0
+
+            vir += x * fx + y * fy + z * fz
+
+    return vir
+
+
+def pressure(
+    x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff, vx, vy, vz, mass
+):
+    K = KineticEnergy(vx, vy, vz, mass)
+    vir = virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff)
+    V = (xhi - xlo) * (yhi - ylo) * (zhi - zlo)
+    P = 1 / (3 * V) * (2 * K + vir)
+    return P
