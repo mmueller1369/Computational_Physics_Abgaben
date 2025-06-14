@@ -12,7 +12,7 @@ from numba import prange
 settings.init()
 
 
-def create_files(trajfile, tempfile, energyfile, rdffile):
+def create_files(trajfile, tempfile, energyfile, pressfile, rdffile):
     if trajfile:
         trajfile = open(os.path.join(settings.path, f"{trajfile}.txt"), "w")
     if tempfile:
@@ -21,10 +21,13 @@ def create_files(trajfile, tempfile, energyfile, rdffile):
     if energyfile:
         energyfile = open(os.path.join(settings.path, f"{energyfile}.txt"), "w")
         energyfile.write("#step  PE  KE  vx2 vy2 vz2\n")
+    if pressfile:
+        pressfile = open(os.path.join(settings.path, f"{pressfile}.txt"), "w")
+        pressfile.write("#step  P\n")
     if rdffile:
         rdffile = open(os.path.join(settings.path, f"{rdffile}.txt"), "w")
         rdffile.write("#r/sigma g(r)\n")
-    return trajfile, tempfile, energyfile, rdffile
+    return trajfile, tempfile, energyfile, pressfile, rdffile
 
 
 def run_simulation(
@@ -38,13 +41,14 @@ def run_simulation(
     trajfile=False,
     tempfile=False,
     energyfile=False,
+    pressfile=False,
     rdffile=False,
     n_save=settings.n_save,
     simulation_name="Simulation",
 ):
     # initializing everything
-    trajfile, tempfile, energyfile, rdffile = create_files(
-        trajfile, tempfile, energyfile, rdffile
+    trajfile, tempfile, energyfile, pressfile, rdffile = create_files(
+        trajfile, tempfile, energyfile, pressfile, rdffile
     )
     x, y, z, vx, vy, vz, fx, fy, fz = initial_config
     force_func = getattr(forces, f"force{force}")
@@ -93,6 +97,26 @@ def run_simulation(
                 ekin = update.KineticEnergy(vx, vy, vz, settings.mass)
                 vx2, vy2, vz2 = misc.squarevelocity(vx, vy, vz, settings.mass)
                 misc.WriteEnergy(energyfile, step, epot, ekin, vx2, vy2, vz2)
+            if pressfile:
+                press = update.pressure(
+                    x,
+                    y,
+                    z,
+                    settings.xlo,
+                    settings.xhi,
+                    settings.ylo,
+                    settings.yhi,
+                    settings.zlo,
+                    settings.zhi,
+                    settings.eps,
+                    settings.sigma,
+                    settings.cutoff,
+                    vx,
+                    vy,
+                    vz,
+                    settings.mass,
+                )
+                misc.WritePress(pressfile, step, press)
             if rdffile:
                 t = int(step / settings.n_analyze)
                 histogram[t] = g_r.histogram(x, y, z, bin_width, settings.rmax)
@@ -103,7 +127,7 @@ def run_simulation(
         for ri, gi in zip(r, rdf):
             rdffile.write("%e %e\n" % (ri, gi))
 
-    for file in [trajfile, tempfile, energyfile]:
+    for file in [trajfile, tempfile, energyfile, pressfile]:
         if file:
             file.close()
 

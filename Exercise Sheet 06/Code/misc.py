@@ -15,6 +15,10 @@ def WriteTemp(filetemp, itime, vx, vy, vz):
     filetemp.write("%i %e\n" % (itime, temp))
 
 
+def WritePress(filepress, itime, press):
+    filepress.write("%i %e\n" % (itime, press))
+
+
 def WriteGr(filegr, itime, hist):
 
     filegr.write("%i" % itime)

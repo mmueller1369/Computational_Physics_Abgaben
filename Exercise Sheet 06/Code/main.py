@@ -5,8 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 settings.init()
+x, y, z, vx, vy, vz = initialize.InitializeAtoms()
+f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
+initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
 
-
+"""
 # ----------------- Part a ----------------- #
 def B2(beta, eps, sigma, cutoff):
     def potentialLJ(r, eps, sigma, cutoff):
@@ -49,11 +52,43 @@ plt.xlabel(r"$\epsilon\beta$")
 plt.ylabel(r"$B_2/\sigma^3$")
 plt.grid(True)
 plt.show()
+"""
 
 
-# x, y, z, vx, vy, vz = initialize.InitializeAtoms()
-# f_initial = np.zeros(shape=(settings.n1 * settings.n2 * settings.n3))
-# initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
+# ----------------- Part b ----------------- #
+equilibrated_config = execute.run_simulation(
+    initial_config=initial_config,
+    integrator="VelocityVerlet",
+    force="LJ",
+    steps=settings.nsteps_equi,
+    thermostat="andersen_thermostat",
+    thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+    n_thermostat=1,
+    trajfile=False,
+    tempfile=False,
+    energyfile=False,
+    pressfile=False,
+    rdffile=False,
+    n_save=10,
+    simulation_name="Equilibration part b",
+)
+
+final_config = execute.run_simulation(
+    initial_config=equilibrated_config,
+    integrator="VelocityVerlet",
+    force="LJ",
+    steps=settings.nsteps_production,
+    thermostat="andersen_thermostat",
+    thermostat_params=[settings.Tdesired, settings.nu, settings.deltat],
+    n_thermostat=1,
+    trajfile=False,
+    tempfile="b_temp",
+    energyfile=False,
+    pressfile="b_press",
+    rdffile="b_gr",
+    n_save=10,
+    simulation_name="Production part b",
+)
 """
 # ----------------- Part a ----------------- #
 settings.tau = 5000 * settings.deltat

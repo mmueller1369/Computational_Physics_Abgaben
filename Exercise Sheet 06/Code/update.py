@@ -255,13 +255,13 @@ def virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
                 sf2 = sigma * sigma / r2
                 sf6 = sf2 * sf2 * sf2
                 ff = 24.0 * eps * sf6 * (sf6 - 0.5) / r2
-                fx -= ff * rijx
-                fy -= ff * rijy
-                fz -= ff * rijz
+                fx = -ff * rijx
+                fy = -ff * rijy
+                fz = -ff * rijz
             else:
                 fx, fy, fz = 0, 0, 0
 
-            vir += x * fx + y * fy + z * fz
+            vir += x[i] * fx + y[i] * fy + z[i] * fz
 
     return vir
 
