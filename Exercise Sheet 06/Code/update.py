@@ -261,7 +261,7 @@ def virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
             else:
                 fx, fy, fz = 0, 0, 0
 
-            vir += x[i] * fx + y[i] * fy + z[i] * fz
+            vir += rijx * fx + rijy * fy + rijz * fz
 
     return vir
 

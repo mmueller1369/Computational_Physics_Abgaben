@@ -11,7 +11,7 @@ import os
 def histogram(x, y, z, bin_width, rmax):
     # calc the distance between the particles
     # only consider distances less than rmax
-    hist = np.zeros(int(rmax / bin_width))
+    hist = np.zeros(int(rmax / settings.deltar))
     for i in prange(len(x)):
         for j in prange(i + 1, len(x)):
             # rijx = x[i] - x[j]
