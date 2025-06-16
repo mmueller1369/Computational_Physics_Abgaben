@@ -100,20 +100,17 @@ def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
     return vx, vy, vz
 
 
-def anderson_thermostat(velocities, nu, T0, dt):
-    """_summary_
 
-    Args:
-        velocities (_type_): _description_
-        nu (_type_): collision frequency in fs^-1
-        T0 (_type_): _description_
-        dt (_type_): _description_
-    """
-    variance = np.sqrt(settings.kb * T0 / settings.mass)
-    for i, _ in enumerate(velocities):
-        if random.random() < nu * dt:
-            velocities[i] = np.random.normal(0, variance, 3)  # 3d veloctiy
-    return velocities
+def andersen_thermostat(vx, vy, vz, T0, Tsystem, nu, dt):
+    # Tsystem just needed for generalization ("Guter Pfusch ist keine schlechte Arbeit")
+    convunits = 238845.9 * 3 / 2
+    variance = np.sqrt(settings.kb * T0 / settings.mass / convunits)
+    for i, _ in enumerate(vx):
+        if np.random.rand() < nu * dt:
+            vx[i] = np.random.normal(0, variance)
+            vy[i] = np.random.normal(0, variance)
+            vz[i] = np.random.normal(0, variance)
+    return vx, vy, vz
 
 
 def histogram():

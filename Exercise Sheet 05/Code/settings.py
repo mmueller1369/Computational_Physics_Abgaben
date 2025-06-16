@@ -82,6 +82,8 @@ def init():
     tau = 500 * deltat
     global n_thermostat
     n_thermostat = 1
+    global nu  # collision frequency for Andersen thermostat
+    nu = 0.01  # in fs^-1
 
     global deltar  # bin size for histogram
     deltar = 0.05 * sigma
