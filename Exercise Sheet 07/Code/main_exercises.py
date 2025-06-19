@@ -88,10 +88,10 @@ plt.savefig(os.path.join(settings.path, "b_v.png"), bbox_inches="tight", dpi=300
 
 # vi g(r)
 plt.figure(figsize=(7, 5))
-plt.plot(r1, gr1*4, color="b", label=r"$g(r)$ for the COMs")
-plt.plot(r2, gr2, color="r", label=r"$g(r)$ for the atoms")
+plt.plot(r1*settings.sigma, gr1*4, color="b", label=r"$g(r)$ for the COMs")
+plt.plot(r2*settings.sigma, gr2, color="r", label=r"$g(r)$ for the atoms")
 plt.ylim(0,5)
-plt.xlabel(r"$r / \sigma$")
+plt.xlabel(r"$r$ [nm]")
 plt.ylabel(r"$g(r)$")
 plt.legend()
 plt.tight_layout()
