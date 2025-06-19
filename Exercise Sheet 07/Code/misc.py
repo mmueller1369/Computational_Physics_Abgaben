@@ -57,6 +57,46 @@ def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
             )
         )
 
+def WriteTopology(fileoutput, x, y, z, molIDs, types, charges, bonds):
+
+    fileoutput.write("lammps data file\n\n")
+
+    fileoutput.write("%i atoms\n" % (settings.n1 * settings.n2 * settings.n3))
+    fileoutput.write("%i atom types\n" % len(set(types)))
+    fileoutput.write("%i bonds\n" % len(bonds)+1)
+    fileoutput.write("%i bond types\n\n" % len(set(bonds)))
+
+    fileoutput.write("%e %e xlo xhi\n" % (settings.xlo, settings.xhi))
+    fileoutput.write("%e %e ylo yhi\n" % (settings.ylo, settings.yhi))
+    fileoutput.write("%e %e zlo zhi\n\n" % (settings.zlo, settings.zhi))
+
+    fileoutput.write("Atoms\n")
+    for i in range(0, len(x)):
+        fileoutput.write(
+            "%i %i %i %e %e %e %e\n"
+            % (
+                i,
+                molIDs[i],
+                types[i],
+                charges[i],
+                (x[i] % (settings.xhi - settings.xlo)),
+                (y[i] % (settings.yhi - settings.ylo)),
+                (z[i] % (settings.zhi - settings.zlo))
+            )
+        )
+        
+    fileoutput.write("Bonds\n")
+    for i in range(0, len(bonds)):
+        fileoutput.write(
+            "%i %i %i %i\n"
+            % (
+                i,
+                bonds[0,i],
+                bonds[1,i],
+                bonds[2,i]
+            )
+        )
+
 
 def paramsLJ():
     return (
