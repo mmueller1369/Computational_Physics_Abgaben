@@ -30,7 +30,6 @@ def histogram(x, y, z, bin_width, rmax):
 
 def histogramBond(x, y, z, bin_width, rmax):
     # Berechne nur die Abstände zwischen den Schwerpunkten (COMs) der Moleküle
-    # Annahme: Atom 0+1 = Molekül 0, 2+3 = Molekül 1, ...
     n_mol = len(x) // 2
     com_x = np.zeros(n_mol)
     com_y = np.zeros(n_mol)

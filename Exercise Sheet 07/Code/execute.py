@@ -234,7 +234,7 @@ def run_simulation_bonded(
         rdf2, _ = g_r.calc_RDF(histogram2, bin_width2)
         r2 = np.arange(0, len(rdf2)) * bin_width2 / settings.sigma
         for ri, gi in zip(r2, rdf2):
-            rdffile1.write("%e %e\n" % (ri, gi))
+            rdffile2.write("%e %e\n" % (ri, gi))
 
     for file in [trajfile1, trajfile2, energyfile, rdffile1, rdffile2]:
         if file:
