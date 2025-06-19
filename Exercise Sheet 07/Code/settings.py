@@ -17,7 +17,7 @@ def init():
     global nsteps_production
     nsteps_production = 100000
     global mass  # mass of the LJ particles (gram/mole)
-    mass = 39.95
+    mass = 13.97
     global kb  # boltzmann's constant (kcal/mole/K)
     kb = 0.0019849421
     global Tdesired  # temperature of the experiment in K
@@ -105,3 +105,7 @@ def init():
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
     global n_save
     n_save = 10
+
+    # diatomic stuff
+    b0 = 0.107
+    kb_di = 9793

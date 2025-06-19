@@ -41,6 +41,59 @@ def forceLJ(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
 
     return fx, fy, fz, epot
 
+@njit(parallel=True)
+def forceLJBond(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, b0, kb_di):
+
+    fx = np.zeros(shape=len(x))
+    fy = np.zeros(shape=len(x))
+    fz = np.zeros(shape=len(x))
+    bms = np.zeros(shape=len(x)/2)
+    N = len(x)
+
+    epot = 0
+    einter = 0
+
+    for i in prange(N - 1):
+        if i%2 == 0:
+            # intramolecular
+            j = i + 1
+            rijx = pbc(x[i], x[j], xlo, xhi)
+            rijy = pbc(y[i], y[j], ylo, yhi)
+            rijz = pbc(z[i], z[j], zlo, zhi)
+            bm = np.sqrt(rijx * rijx + rijy * rijy + rijz * rijz)
+            bms[i//2] = bm
+            einter += 0.5 * kb_di * (bm - b0)**2
+            ff = kb_di * (1 - b0/bm)
+            fx[i] -= ff * rijx
+            fy[i] -= ff * rijy
+            fz[i] -= ff * rijz
+            fx[j] += ff * rijx
+            fy[j] += ff * rijy
+            fz[j] += ff * rijz
+
+            # intermolecular starts at
+            j_inter = i + 2
+        else:
+            j_inter = i + 1
+
+        for j in prange(j_inter, N):
+            rijx = pbc(x[i], x[j], xlo, xhi)
+            rijy = pbc(y[i], y[j], ylo, yhi)
+            rijz = pbc(z[i], z[j], zlo, zhi)
+            r2 = rijx * rijx + rijy * rijy + rijz * rijz
+            sf2 = sigma * sigma / r2
+            sf6 = sf2 * sf2 * sf2
+            epot += 4.0 * eps * sf6 * (sf6 - 1.0)
+            ff = 24.0 * eps * sf6 * (sf6 - 0.5) / r2
+            fx[i] -= ff * rijx
+            fy[i] -= ff * rijy
+            fz[i] -= ff * rijz
+            fx[j] += ff * rijx
+            fy[j] += ff * rijy
+            fz[j] += ff * rijz
+
+    return fx, fy, fz, epot, einter, bm
+
 
 @njit(parallel=True)
 def forceLJ_cut(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
