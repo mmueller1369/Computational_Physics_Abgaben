@@ -14,9 +14,6 @@ def histogram(x, y, z, bin_width, rmax):
     hist = np.zeros(int(rmax / settings.deltar))
     for i in prange(len(x)):
         for j in prange(i + 1, len(x)):
-            # rijx = x[i] - x[j]
-            # rijy = y[i] - y[j]
-            # rijz = z[i] - z[j]
             rijx = pbc(x[i], x[j], settings.xlo, settings.xhi)
             rijy = pbc(y[i], y[j], settings.ylo, settings.yhi)
             rijz = pbc(z[i], z[j], settings.zlo, settings.zhi)
@@ -28,6 +25,31 @@ def histogram(x, y, z, bin_width, rmax):
                 hist[bin_n] += 2
     # after sort the distance in the bins
 
+    return hist
+
+
+def histogramBond(x, y, z, bin_width, rmax):
+    # Berechne nur die Abstände zwischen den Schwerpunkten (COMs) der Moleküle
+    # Annahme: Atom 0+1 = Molekül 0, 2+3 = Molekül 1, ...
+    n_mol = len(x) // 2
+    com_x = np.zeros(n_mol)
+    com_y = np.zeros(n_mol)
+    com_z = np.zeros(n_mol)
+    for i in range(n_mol):
+        com_x[i] = 0.5 * (x[2 * i] + x[2 * i + 1])
+        com_y[i] = 0.5 * (y[2 * i] + y[2 * i + 1])
+        com_z[i] = 0.5 * (z[2 * i] + z[2 * i + 1])
+    hist = np.zeros(int(rmax / settings.deltar))
+    for i in prange(n_mol):
+        for j in prange(i + 1, n_mol):
+            rijx = pbc(com_x[i], com_x[j], settings.xlo, settings.xhi)
+            rijy = pbc(com_y[i], com_y[j], settings.ylo, settings.yhi)
+            rijz = pbc(com_z[i], com_z[j], settings.zlo, settings.zhi)
+            r2 = rijx * rijx + rijy * rijy + rijz * rijz
+            if r2 < rmax * rmax:
+                r = np.sqrt(r2)
+                bin_n = int(r / bin_width)
+                hist[bin_n] += 2
     return hist
 
 

@@ -47,7 +47,6 @@ def forceLJBond(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, b0, kb_di):
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
     fz = np.zeros(shape=len(x))
-    bms = np.zeros(shape=len(x)/2)
     N = len(x)
 
     epot = 0
@@ -61,15 +60,14 @@ def forceLJBond(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, b0, kb_di):
             rijy = pbc(y[i], y[j], ylo, yhi)
             rijz = pbc(z[i], z[j], zlo, zhi)
             bm = np.sqrt(rijx * rijx + rijy * rijy + rijz * rijz)
-            bms[i//2] = bm
             einter += 0.5 * kb_di * (bm - b0)**2
             ff = kb_di * (1 - b0/bm)
-            fx[i] -= ff * rijx
-            fy[i] -= ff * rijy
-            fz[i] -= ff * rijz
-            fx[j] += ff * rijx
-            fy[j] += ff * rijy
-            fz[j] += ff * rijz
+            fx[i] += ff * rijx
+            fy[i] += ff * rijy
+            fz[i] += ff * rijz
+            fx[j] -= ff * rijx
+            fy[j] -= ff * rijy
+            fz[j] -= ff * rijz
 
             # intermolecular starts at
             j_inter = i + 2
@@ -92,7 +90,7 @@ def forceLJBond(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, b0, kb_di):
             fy[j] += ff * rijy
             fz[j] += ff * rijz
 
-    return fx, fy, fz, epot, einter, bm
+    return fx, fy, fz, epot, einter
 
 
 @njit(parallel=True)
