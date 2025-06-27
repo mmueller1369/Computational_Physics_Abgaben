@@ -9,6 +9,9 @@ def WriteEnergy(fileenergy, itime, epot, ekin, vx2, vy2, vz2):
 
     fileenergy.write("%i %e %e %e %e %e\n" % (itime, epot, ekin, vx2, vy2, vz2))
 
+def WriteEnergyBond(fileenergy, itime, epot, ekin, UBond):
+
+    fileenergy.write("%i %e %e %e\n" % (itime, epot, ekin, UBond))
 
 def WriteTemp(filetemp, itime, vx, vy, vz):
     temp = initialize.temperature(vx, vy, vz)
@@ -27,12 +30,13 @@ def WriteGr(filegr, itime, hist):
     filegr.write("\n")
 
 
-def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
+def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz, mode = 'atoms'):
 
     fileoutput.write("ITEM: TIMESTEP \n")
     fileoutput.write("%i \n" % itime)
     fileoutput.write("ITEM: NUMBER OF ATOMS \n")
-    fileoutput.write("%i \n" % (settings.n1 * settings.n2 * settings.n3))
+    multiplier = 2 if mode == 'bond' else 1
+    fileoutput.write("%i \n" % (settings.n1 * settings.n2 * settings.n3*multiplier))
     fileoutput.write("ITEM: BOX BOUNDS \n")
     fileoutput.write("%e %e \n" % (settings.xlo, settings.xhi))
     fileoutput.write("%e %e \n" % (settings.ylo, settings.yhi))
@@ -40,11 +44,12 @@ def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
     fileoutput.write("ITEM: ATOMS id type x y z vx vy vz fx fy fz\n")
 
     for i in range(0, len(x)):
+        itype = i % 2 if mode == 'bond' else i
         fileoutput.write(
             "%i %i %e %e %e %e %e %e %e %e %e\n"
             % (
                 i,
-                i,
+                itype,
                 (x[i] % (settings.xhi - settings.xlo)),
                 (y[i] % (settings.yhi - settings.ylo)),
                 (z[i] % (settings.zhi - settings.zlo)),
@@ -54,6 +59,46 @@ def WriteTrajectory(fileoutput, itime, x, y, z, vx, vy, vz, fx, fy, fz):
                 fx[i],
                 fy[i],
                 fz[i],
+            )
+        )
+
+def WriteTopology(fileoutput, x, y, z):
+
+    fileoutput.write("lammps data file\n\n")
+
+    fileoutput.write("%i atoms\n" % (settings.n1 * settings.n2 * settings.n3))
+    fileoutput.write("%i atom types\n" % 2)
+    fileoutput.write("%i bonds\n" % (settings.n1 * settings.n2 * settings.n3)/2)
+    fileoutput.write("%i bond types\n\n" % 1)
+
+    fileoutput.write("%e %e xlo xhi\n" % (settings.xlo, settings.xhi))
+    fileoutput.write("%e %e ylo yhi\n" % (settings.ylo, settings.yhi))
+    fileoutput.write("%e %e zlo zhi\n\n" % (settings.zlo, settings.zhi))
+
+    fileoutput.write("Atoms\n")
+    for i in range(0, len(x)):
+        fileoutput.write(
+            "%i %i %i %e %e %e %e\n"
+            % (
+                i,
+                int(i/2),
+                (i%2)+1,
+                0,
+                (x[i] % (settings.xhi - settings.xlo)),
+                (y[i] % (settings.yhi - settings.ylo)),
+                (z[i] % (settings.zhi - settings.zlo))
+            )
+        )
+        
+    fileoutput.write("Bonds\n")
+    for i in range(0, len(x)):
+        fileoutput.write(
+            "%i %i %i %i\n"
+            % (
+                i,
+                1,
+                2*i,
+                2*i+1
             )
         )
 
@@ -69,6 +114,20 @@ def paramsLJ():
         settings.eps,
         settings.sigma,
         settings.cutoff,
+    )
+
+def paramsLJBond():
+    return (
+        settings.xlo,
+        settings.xhi,
+        settings.ylo,
+        settings.yhi,
+        settings.zlo,
+        settings.zhi,
+        settings.eps,
+        settings.sigma,
+        settings.b0,
+        settings.kb_di
     )
 
 
