@@ -108,13 +108,6 @@ def ffe_LJ(rol, sigma, eps):
 
 
 @njit
-def gamma(r, alpha):
-    summ1 = math.erfc(alpha*r)/r**2
-    summ2 = 2*alpha/math.sqrt(math.pi) * math.exp(-alpha**2*r**2)/r
-    return summ1 + summ2
-
-
-@njit
 def ffe_coul(qo, ql, rol, alpha, cutoff, gamma_cut):
     prefac = qo*ql / (4*math.pi*settings.eps0)
     ff_coulol = prefac * (gamma(rol, alpha) - gamma_cut) / rol
@@ -122,3 +115,10 @@ def ffe_coul(qo, ql, rol, alpha, cutoff, gamma_cut):
     erfccut = math.erfc(alpha*cutoff) / cutoff
     e_coulol = prefac * (erfcrol - erfccut + gamma_cut*(rol*cutoff))
     return ff_coulol, e_coulol
+
+
+@njit
+def gamma(r, alpha):
+    summ1 = math.erfc(alpha*r)/r**2
+    summ2 = 2*alpha/math.sqrt(math.pi) * math.exp(-alpha**2*r**2)/r
+    return summ1 + summ2
