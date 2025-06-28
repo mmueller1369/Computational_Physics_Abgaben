@@ -50,9 +50,13 @@ def init():
 
     # ------ general variables ------ #
 
-    # number of H2O molecules
+    # molecule properties
     global nmol # total number of molecules
     nmol = ini_x * ini_y * ini_z
+    global n_dof_mol # degrees of freedom per H2O molecule
+    n_dof_mol = 9 # 3*3*3 = 9 translational, bonds and angles not fixed
+    global rho
+    rho = 1  # molecules/sigma^-3
 
     # timestep
     global deltat
@@ -66,19 +70,16 @@ def init():
 
     # constants and conversion factors
     global kb  # boltzmann's constant
-    kb = 0.0019849421 # kcal/mole/K    .......................
-    #convdistance = 4.1868e-06
-    #convvelocity = 4.1868e-06
+    kb = 1.9872036e-3 # kcal/mole/K
+    global conv_factor
+    conv_factor = 2.390057361e5 # from g/mole*nm^2/fs^2 to kcal/mole (energies)
+                                # or from g/mole*nm/fs^2 to kcal/mole/nm (forces)
 
     # masses
-    massH = 1.6735e-27 # kg
-    massO = 2.6561e-26 # kg
+    massH = 1.007805272e-6 # g/mole
+    massO = 1.599540833e-5 # g/mole
     global masses # array might seem inelegant, but speeds up the code
     masses = np.tile([massO, massH, massH], nmol)
-
-    # degrees of freedom per H2O molecule
-    global n_dof_mol
-    n_dof_mol = 9 # 3*3*3 = 9 translational, bonds and angles not fixed
 
 
 
@@ -99,7 +100,7 @@ def init():
     # intermolecular potential
     # Lennard-Jones
     global eps
-    eps = 0.2*kb*Tdesired # ...............................................
+    eps = 0.2*kb*Tdesired # kcal/mole
     global sigma
     sigma = 0.321 # nm
     global cutoff # valid for both, LJ and Coulomb
@@ -110,7 +111,7 @@ def init():
     global qH
     qH = 0.42 # e
     global eps0_el
-    eps0_el = ... # ........................................................
+    eps0_el = 5.727657501e8 # e^2fs^2/(g/mole)/nm^3
     global alpha
     alpha = 1/cutoff # 1/nm
 

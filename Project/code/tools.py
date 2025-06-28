@@ -8,8 +8,8 @@ settings.init()
 def computeKineticEnergy(vx, vy, vz, masses):
     ekin = 0
     for i in prange(len(vx)):
-        ekin += 0.5 * masses[i] * (vx[i]**2 + vy[i]**2 + vz[i]**2) * settings.convvelocity**2
-    return ekin
+        ekin += 0.5 * masses[i] * (vx[i]**2 + vy[i]**2 + vz[i]**2)
+    return ekin*settings.conv_factor
 
 
 def computeTemperature(vx, vy, vz, masses):

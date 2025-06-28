@@ -22,9 +22,9 @@ def VelocityVerlet(
 
     # update the position at t+dt
     for i in prange(N):
-        x[i] += vx[i] * dt + fx[i] * dt * dt * 0.5 / settings.masses[i] * settings.convdistance
-        y[i] += vy[i] * dt + fy[i] * dt * dt * 0.5 / settings.masses[i] * settings.convdistance
-        z[i] += vz[i] * dt + fz[i] * dt * dt * 0.5 / settings.masses[i] * settings.convdistance
+        x[i] += vx[i]*dt + fx[i]/settings.conv_factor*dt*dt/2/settings.masses[i]
+        y[i] += vy[i]*dt + fy[i]/settings.conv_factor*dt*dt/2/settings.masses[i]
+        z[i] += vz[i]*dt + fz[i]/settings.conv_factor*dt*dt/2/settings.masses[i]
 
     # save the force at t
     fx0 = fx
@@ -37,8 +37,8 @@ def VelocityVerlet(
     
     # update the velocity
     for i in prange(N):
-        vx[i] += 0.5 * dt * (fx[i] + fx0[i]) / settings.masses[i] * settings.convvelocity
-        vy[i] += 0.5 * dt * (fy[i] + fy0[i]) / settings.masses[i] * settings.convvelocity
-        vz[i] += 0.5 * dt * (fz[i] + fz0[i]) / settings.masses[i] * settings.convvelocity
+        vx[i] += dt/settings.masses[i]/2 * (fx[i]+fx0[i])/settings.conv_factor
+        vy[i] += dt/settings.masses[i]/2 * (fy[i]+fy0[i])/settings.conv_factor
+        vz[i] += dt/settings.masses[i]/2 * (fz[i]+fz0[i])/settings.conv_factor
 
     return x, y, z, vx, vy, vz, fx, fy, fz, energies
