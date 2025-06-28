@@ -1,18 +1,16 @@
-import settings
 import numpy as np
 from numba import njit, prange
 import math
+import settings
 
 
-# unit of the force: (kcal/mole)/nm
-
-# no pbcs used!
 @njit(parallel=True)
-def forceH2O(x, y, z, paramsLJ, paramsCoul, paramsInter):
-    eps, sigma = paramsLJ
-    qO, qH, alpha, cutoff = paramsCoul
+def forceH2O(
+    x, y, z,
+    k_bond, s0, k_angle, theta0, # Intramolecular parameters
+    eps, sigma, cutoff, qO, qH, eps0_el, alpha, # Intermolecular parameters
+    ):
     gamma_cut = gamma(cutoff, alpha)
-    k_bond, k_angle, s0, theta0 = paramsInter
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
     fz = np.zeros(shape=len(x))
@@ -59,14 +57,18 @@ def forceH2O(x, y, z, paramsLJ, paramsCoul, paramsInter):
             roly = y[l] - y[o]
             rolz = z[l] - z[o]
             rol = math.sqrt(rolx**rolx + roly**roly + rolz**rolz)
-            if l % 3 == 0:  # if l is an O-atom
-                ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
-                ql = qO
+            # # determining absolute values of force (divided by rol) and energy
+            if rol > cutoff:
+                if l % 3 == 0:  # if l is an O-atom
+                    ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
+                    ql = qO
+                else:
+                    ff_LJol, e_LJol = 0, 0
+                    ql = qH
+                ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
             else:
                 ff_LJol, e_LJol = 0, 0
-                ql = qH
-            ff_coulol, e_coulol = ffe_coul(
-                qO, ql, rol, alpha, cutoff, gamma_cut)
+                ff_coulol, e_coulol = 0, 0
             ff_inter = ff_LJol + ff_coulol
             # # updating the forces
             fx[o] -= ff_inter * rolx
@@ -78,8 +80,9 @@ def forceH2O(x, y, z, paramsLJ, paramsCoul, paramsInter):
             # # updating the energies
             e_LJ += e_LJol
             e_coul += e_coulol
-
-    return fx, fy, fz, e_LJ, e_coul, e_bond, e_angle
+        
+    energies = e_LJ, e_coul, e_bond, e_angle
+    return fx, fy, fz, energies
 
 
 @njit
@@ -108,8 +111,8 @@ def ffe_LJ(rol, sigma, eps):
 
 
 @njit
-def ffe_coul(qo, ql, rol, alpha, cutoff, gamma_cut):
-    prefac = qo*ql / (4*math.pi*settings.eps0)
+def ffe_coul(rol, qo, ql, eps0_el, alpha, cutoff, gamma_cut):
+    prefac = qo*ql / (4*math.pi*eps0_el)
     ff_coulol = prefac * (gamma(rol, alpha) - gamma_cut) / rol
     erfcrol = math.erfc(alpha*rol) / rol
     erfccut = math.erfc(alpha*cutoff) / cutoff
@@ -122,3 +125,13 @@ def gamma(r, alpha):
     summ1 = math.erfc(alpha*r)/r**2
     summ2 = 2*alpha/math.sqrt(math.pi) * math.exp(-alpha**2*r**2)/r
     return summ1 + summ2
+
+
+def paramsH2O():
+    settings.init()
+    return (
+        settings.k_bond, settings.s0, # Intramolecular parameters
+        settings.k_angle, settings.theta0,
+        settings.eps, settings.sigma, settings.cutoff, # Intermolecular parameters 
+        settings.qO, settings.qH, settings.eps0_el, settings.alpha
+    )

@@ -1,8 +1,10 @@
-import settings
 import random
 import math
 import numpy as np
 from tqdm import tqdm
+import tools
+import settings
+settings.init()
 
 
 def single(pert_length=0, pert_angle=0):
@@ -24,8 +26,7 @@ def single(pert_length=0, pert_angle=0):
 
 
 def cubic_lattice():
-    nmol = settings.n1 * settings.n2 * settings.n3
-    natoms = 3 * nmol
+    natoms = 3 * settings.nmol
     x = np.zeros(natoms)
     y = np.zeros(natoms)
     z = np.zeros(natoms)
@@ -33,20 +34,20 @@ def cubic_lattice():
     vy = np.zeros(natoms)
     vz = np.zeros(natoms)
     n = 0
-    pbar = tqdm(total=nmol, desc="Initializing H2O-molecules")
-    for nx in range(settings.n1):
-        for ny in range(settings.n2):
-            for nz in range(settings.n3):
+    pbar = tqdm(total=settings.nmol, desc="Initializing H2O molecules")
+    for nx in range(settings.ini_x):
+        for ny in range(settings.ini_y):
+            for nz in range(settings.ini_z):
                 # position of oxygen
                 ox = nx * settings.a_lat + settings.a_lat / 2.0
                 oy = ny * settings.a_lat + settings.a_lat / 2.0
                 oz = nz * settings.a_lat + settings.a_lat / 2.0
                 # creating first random vector v1
-                v1 = random.random(shape=(3))
+                v1 = np.random.rand(3)
                 v1 /= np.linalg.norm(v1)
                 v1 *= settings.s0 * math.cos(settings.theta0/2)
                 # creating second random vector which yields v2 orthogonal to v1
-                v2_helper = random.random(shape=(3))
+                v2_helper = np.random.rand(3)
                 v2 = np.cross(v1, v2_helper)
                 v2 /= np.linalg.norm(v2)
                 v2 *= settings.s0 * math.sin(settings.theta0/2)
@@ -78,12 +79,12 @@ def cubic_lattice():
     pbar.close()
 
     # cancel the linear momentum
-    vx -= np.sum(vx) / nmol
-    vy -= np.sum(vy) / nmol
-    vz -= np.sum(vz) / nmol
+    vx -= np.sum(vx) / settings.nmol
+    vy -= np.sum(vy) / settings.nmol
+    vz -= np.sum(vz) / settings.nmol
 
     # rescale the velocity to the desired temperature
-    Trandom = temperature(vx, vy, vz)
-    vx, vy, vz = rescalevelocity(vx, vy, vz, Tdesired, Trandom)
+    Trandom = tools.computeTemperature(vx, vy, vz, settings.masses)
+    vx, vy, vz = tools.rescaleVelocity(vx, vy, vz, settings.Tdesired, Trandom)
 
     return x, y, z, vx, vy, vz
