@@ -48,8 +48,8 @@ def init():
     global rho
     rho = 1  # molecules/sigma^-3
     global masses # array might seem inelegant, but speeds up the code
-    massH = 1.007805272e-6 # g/mole
-    massO = 1.599540833e-5 # g/mole
+    massH = 1.007805272 # g/mole ...................................nochmal checken
+    massO = 15.99540833 # g/mole
     masses = np.tile([massO, massH, massH], nmol)
 
     # bounds

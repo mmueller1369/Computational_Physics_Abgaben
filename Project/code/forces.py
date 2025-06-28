@@ -29,15 +29,15 @@ def forceH2O(
 
         # intramolecular stuff
         # # properties needed
-        six = x[i] - x[o]
-        siy = y[i] - y[o]
-        siz = z[i] - z[o]
-        sjx = x[j] - x[o]
-        sjy = y[j] - y[o]
-        sjz = z[j] - z[o]
-        si = math.sqrt(six**six + siy**siy + siz**siz)
-        sj = math.sqrt(sjx**sjx + sjy**sjy + sjz**sjz)
-        sproj = six**sjx + siy**sjy + siz**sjz
+        six = x[o] - x[i]
+        siy = y[o] - y[i]
+        siz = z[o] - z[i]
+        sjx = x[o] - x[j]
+        sjy = y[o] - y[j]
+        sjz = z[o] - z[j]
+        si = math.sqrt(six*six + siy*siy + siz*siz)
+        sj = math.sqrt(sjx*sjx + sjy*sjy + sjz*sjz)
+        sproj = six*sjx + siy*sjy + siz*sjz
         theta = math.acos(sproj/(si*sj))
         # # updating the forces
         fx[i] -= f_bond(i, x, si, k_bond, s0) + f_angle(i, j, x, si, sproj, theta, k_angle, theta0)
@@ -88,7 +88,8 @@ def forceH2O(
 @njit
 def f_bond(i, pos, si, k_bond, s0):
     svec = pos[i]
-    return k_bond * (si - s0) * svec/si
+    ff = k_bond * (1 - s0/si)
+    return ff * svec
 
 
 @njit

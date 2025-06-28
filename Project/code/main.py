@@ -6,11 +6,10 @@ settings.init()
 
 
 # ----------------- Part 1 ----------------- #
-x, y, z, vx, vy, vz = initialize.single()
+x, y, z, vx, vy, vz = initialize.single(pert_angle=settings.theta0/10)
 f_initial = np.zeros(shape=(3))
 initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
 settings.bounds = np.array([[-1,1], [-1,1], [-1,1]])
-print(initial_config)
 
 execute.run_simulation(
     initial_config=initial_config,
@@ -20,9 +19,11 @@ execute.run_simulation(
         settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
         settings.qO, settings.qH, settings.eps0_el, settings.alpha],
     steps=1000,
-    thermostat="BerendsenThermostat",
-    thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
+    thermostat=False,
     trajfile="part1_traj",
     n_save=1,
     simulation_name="Part 1",
 )
+
+# thermostat="BerendsenThermostat"
+# thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
