@@ -15,7 +15,7 @@ def single(pert_length=0, pert_angle=0):
     vy = np.zeros(shape=(3))
     vz = np.zeros(shape=(3))
 
-    length = settings.s0 * + pert_length
+    length = settings.s0 + pert_length
     angle = settings.theta0 + pert_angle
 
     x[1] = settings.s0

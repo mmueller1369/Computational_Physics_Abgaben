@@ -46,7 +46,7 @@ def run_simulation(
     fx, fy, fz, energies = force_func(x, y, z, *force_params)
     ## save the specified properties of the initial system
     save_specified_properties(trajfile, tempfile, energyfile, rdffile,
-            step, x, y, z, vx, vy, vz, fx, fy, fz, energies, n_save, histograms)
+                0, x, y, z, vx, vy, vz, fx, fy, fz, energies, n_save, histograms)
 
     # conduct the run
     for step in tqdm(prange(0, steps), desc=simulation_name):
@@ -60,7 +60,7 @@ def run_simulation(
         ## apply the thermostat
         if thermostat and step % n_thermostat == 0:
             Tnow = tools.computeTemperature(vx, vy, vz, settings.masses)
-            vx, vy, vz = thermostat_func(vx, vy, vz, vx, vy, vz, Tnow, *thermostat_params)
+            vx, vy, vz = thermostat_func(vx, vy, vz, Tnow, *thermostat_params)
         ## save the specified parameters
         if step % n_save == 0:
             save_specified_properties(trajfile, tempfile, energyfile, rdffile,

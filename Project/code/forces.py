@@ -38,7 +38,7 @@ def forceH2O(
         si = math.sqrt(six**six + siy**siy + siz**siz)
         sj = math.sqrt(sjx**sjx + sjy**sjy + sjz**sjz)
         sproj = six**sjx + siy**sjy + siz**sjz
-        theta = math.arccos(sproj/(si*sj))
+        theta = math.acos(sproj/(si*sj))
         # # updating the forces
         fx[i] -= f_bond(i, x, si, k_bond, s0) + f_angle(i, j, x, si, sproj, theta, k_angle, theta0)
         fy[i] -= f_bond(i, y, si, k_bond, s0) + f_angle(i, j, y, si, sproj, theta, k_angle, theta0)
