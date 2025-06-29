@@ -44,12 +44,13 @@ def run_simulation(
         histograms = None
     ## calculate the initial forces and energies
     fx, fy, fz, energies = force_func(x, y, z, *force_params)
-    ## save the specified properties of the initial system
-    save_specified_properties(trajfile, tempfile, energyfile, rdffile,
-                0, x, y, z, vx, vy, vz, fx, fy, fz, energies, n_save, histograms)
 
     # conduct the run
     for step in tqdm(prange(0, steps), desc=simulation_name):
+        ## save the specified parameters of the current state
+        if step % n_save == 0:
+            save_specified_properties(trajfile, tempfile, energyfile, rdffile,
+                step, x, y, z, vx, vy, vz, fx, fy, fz, energies, n_save, histograms)
         ## integrate equations of motion
         x, y, z, vx, vy, vz, fx, fy, fz, energies = integrators.VelocityVerlet(
             x, y, z,
@@ -61,10 +62,6 @@ def run_simulation(
         if thermostat and step % n_thermostat == 0:
             Tnow = tools.computeTemperature(vx, vy, vz, settings.masses)
             vx, vy, vz = thermostat_func(vx, vy, vz, Tnow, *thermostat_params)
-        ## save the specified parameters
-        if step % n_save == 0:
-            save_specified_properties(trajfile, tempfile, energyfile, rdffile,
-                step, x, y, z, vx, vy, vz, fx, fy, fz, energies, n_save, histograms)
             
     # after the run
     ## calculate the final rdf function from all the histograms
@@ -73,7 +70,6 @@ def run_simulation(
         r = np.arange(0, len(rdf)) * settings.dr_hist
         for ri, gi in zip(r, rdf):
             rdffile.write("%e %e\n" % (ri, gi))
-    #
     ## close all files
     for file in files:
         if file:
@@ -87,13 +83,13 @@ def create_files(trajfile, tempfile, energyfile, rdffile):
         trajfile = open(os.path.join(settings.path, f"{trajfile}.txt"), "w")
     if tempfile:
         tempfile = open(os.path.join(settings.path, f"{tempfile}.txt"), "w")
-        tempfile.write("#step  T\n")
+        tempfile.write("# step T\n")
     if energyfile:
         energyfile = open(os.path.join(settings.path, f"{energyfile}.txt"), "w")
-        energyfile.write("#step  e_LJ  e_coul  e_bond  e_angle  e_kin")
+        energyfile.write("# step e_LJ e_coul e_bond e_angle e_kin\n")
     if rdffile:
         rdffile = open(os.path.join(settings.path, f"{rdffile}.txt"), "w")
-        rdffile.write("#r  g(r)\n")
+        rdffile.write("# r g(r)\n")
     return (trajfile, tempfile, energyfile, rdffile)
 
 

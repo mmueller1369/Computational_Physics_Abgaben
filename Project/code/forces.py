@@ -40,14 +40,14 @@ def forceH2O(
         sproj = six*sjx + siy*sjy + siz*sjz
         theta = math.acos(sproj/(si*sj))
         # # updating the forces
-        fx[i] -= f_bond(i, x, si, k_bond, s0) + f_angle(i, j, x, si, sproj, theta, k_angle, theta0)
-        fy[i] -= f_bond(i, y, si, k_bond, s0) + f_angle(i, j, y, si, sproj, theta, k_angle, theta0)
-        fz[i] -= f_bond(i, z, si, k_bond, s0) + f_angle(i, j, z, si, sproj, theta, k_angle, theta0)
-        fx[j] -= f_bond(j, x, sj, k_bond, s0) + f_angle(j, i, x, sj, sproj, theta, k_angle, theta0)
-        fy[j] -= f_bond(j, y, sj, k_bond, s0) + f_angle(j, i, y, sj, sproj, theta, k_angle, theta0)
-        fz[j] -= f_bond(j, z, sj, k_bond, s0) + f_angle(j, i, z, sj, sproj, theta, k_angle, theta0)
+        fx[i] += f_bond(i, x, si, k_bond, s0) + f_angle(i, j, x, si, sproj, theta, k_angle, theta0)
+        fy[i] += f_bond(i, y, si, k_bond, s0) + f_angle(i, j, y, si, sproj, theta, k_angle, theta0)
+        fz[i] += f_bond(i, z, si, k_bond, s0) + f_angle(i, j, z, si, sproj, theta, k_angle, theta0)
+        fx[j] += f_bond(j, x, sj, k_bond, s0) + f_angle(j, i, x, sj, sproj, theta, k_angle, theta0)
+        fy[j] += f_bond(j, y, sj, k_bond, s0) + f_angle(j, i, y, sj, sproj, theta, k_angle, theta0)
+        fz[j] += f_bond(j, z, sj, k_bond, s0) + f_angle(j, i, z, sj, sproj, theta, k_angle, theta0)
         # # updating the energies
-        e_bond += k_bond/2 * ((si - s0)**2 - (sj - s0)**2)
+        e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
 
         # intermolecular stuff
@@ -89,7 +89,7 @@ def forceH2O(
 def f_bond(i, pos, si, k_bond, s0):
     svec = pos[i]
     ff = k_bond * (1 - s0/si)
-    return ff * svec
+    return -ff*svec
 
 
 @njit
@@ -98,7 +98,7 @@ def f_angle(i, j, pos, si, sproj, theta, k_angle, theta0):
     svecj = pos[j]
     prefac = k_angle * (theta - theta0) / math.tanh(theta)
     vectorial = svecj/sproj - sveci/(2*si**2)
-    return prefac*vectorial
+    return -prefac*vectorial
 
 
 @njit
