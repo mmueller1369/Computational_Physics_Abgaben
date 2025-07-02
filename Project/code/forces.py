@@ -21,6 +21,10 @@ def forceH2O(
     e_bond = 0
     e_angle = 0
 
+    c2 = sigma * sigma / cutoff / cutoff
+    c6 = c2 * c2 * c2
+    e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
+
     for mol in prange(N//3):
         # attributing the atom indice
         o = 3*mol  # index of O-atom
@@ -78,7 +82,7 @@ def forceH2O(
             fy[l] += ff_inter * roly
             fz[l] += ff_inter * rolz
             # # updating the energies
-            e_LJ += e_LJol
+            e_LJ += e_LJol - e_LJ_cut
             e_coul += e_coulol
         
     energies = e_LJ, e_coul, e_bond, e_angle
@@ -126,13 +130,3 @@ def gamma(r, alpha):
     summ1 = math.erfc(alpha*r)/r**2
     summ2 = 2*alpha/math.sqrt(math.pi) * math.exp(-alpha**2*r**2)/r
     return summ1 + summ2
-
-
-def paramsH2O():
-    settings.init()
-    return (
-        settings.k_bond, settings.s0, # Intramolecular parameters
-        settings.k_angle, settings.theta0,
-        settings.eps, settings.sigma, settings.cutoff, # Intermolecular parameters 
-        settings.qO, settings.qH, settings.eps0_el, settings.alpha
-    )

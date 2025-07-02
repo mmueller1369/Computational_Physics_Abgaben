@@ -5,7 +5,7 @@ import postprocessing
 import settings
 settings.init()
 
-name = "pert_b_0.1"
+name = "pert_s_0.1"
 trajfile = os.path.join(settings.path, f"part_1/{name}_traj.txt")
 energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
 step, x, y, z = postprocessing.read_pos(trajfile)
