@@ -13,47 +13,47 @@ import os
 def init():
 
     global nsteps_equi  # number of time step to analyze
-    nsteps_equi = 40000
+    nsteps_equi = 5000
     global nsteps_production
-    nsteps_production = 40000
+    nsteps_production = 495000
     global mass  # mass of the LJ particles (gram/mole)
-    mass = 39.95
+    mass = 13.97
     global kb  # boltzmann's constant (kcal/mole/K)
     kb = 0.0019849421
     global Tdesired  # temperature of the experiment in K
     Tdesired = 300.0
     global eps  # eps in LJ (kcal/mole)
-    eps = 0.297741315
+    eps = 0.0595
     global sigma  # sigma in LJ (nm)
-    sigma = 0.188
-    global cutoff  # cutoff arbitrary at 2.5 sigma
-    cutoff = 2.5 * sigma
+    sigma = 0.326
     global deltat  # time step (fs)
     deltat = 1
-    global eps_wall  # eps for wall (kcal/mole)
-    eps_wall = 1.4887
-    global sigma_wall  # sigma for wall (nm)
-    sigma_wall = 0.0376
-    global cutoff_wall  # cutoff for wall (nm)
-    cutoff_wall = 2.5 * sigma_wall
+    # diatomic stuff
+    global b0
+    b0 = 0.107
+    global kb_di
+    kb_di = 9793
 
     # number of particle = n1*n2 distributed on s square lattice
     global n1
-    n1 = 3
+    n1 = 5
     global n2
-    n2 = 3
+    n2 = 5
     global n3
-    n3 = 3
+    n3 = 5
     global nparticles
     nparticles = n1 * n2 * n3
 
     # desired density
     global rho
-    rho = 0.5  # N/V = 0.01 sigma^-3
+    rho = 0.25  # N/V = 0.01 sigma^-3
 
     # box lengths in each direction
+    global lx
     lx = n1 / (rho ** (1 / 3))
+    global ly
     ly = n2 / (rho ** (1 / 3))
+    global lz
     lz = n3 / (rho ** (1 / 3))
 
     # box size
@@ -102,3 +102,4 @@ def init():
     path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output")
     global n_save
     n_save = 10
+

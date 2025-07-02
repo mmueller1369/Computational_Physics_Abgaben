@@ -100,7 +100,6 @@ def berendsen_thermostat(vx, vy, vz, T1, T2, tau, dt):
     return vx, vy, vz
 
 
-
 def andersen_thermostat(vx, vy, vz, T0, Tsystem, nu, dt):
     # Tsystem just needed for generalization ("Guter Pfusch ist keine schlechte Arbeit")
     convunits = 238845.9 * 3 / 2

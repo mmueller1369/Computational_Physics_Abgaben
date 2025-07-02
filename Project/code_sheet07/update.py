@@ -72,6 +72,65 @@ def VelocityVerlet(
     return x, y, z, vx, vy, vz, fx, fy, fz, epot
 
 
+@njit(parallel=True)
+def VelocityVerletBond(
+    x,
+    y,
+    z,
+    vx,
+    vy,
+    vz,
+    fx,
+    fy,
+    fz,
+    xlo,
+    xhi,
+    ylo,
+    yhi,
+    zlo,
+    zhi,
+    eps,
+    sigma,
+    b0,
+    kb_di,
+    deltat,
+    mass,
+):
+
+    # conversion factor
+    convdistance = 4.1868e-06
+    convvelocity = 4.1868e-06
+    fx0 = np.zeros(shape=len(x))
+    fy0 = np.zeros(shape=len(y))
+    fz0 = np.zeros(shape=len(z))
+    N = len(x)
+    dt = deltat
+    # mass = mass
+
+    # update the position at t+dt
+    for i in prange(N):
+        x[i] += vx[i] * dt + fx[i] * dt * dt * 0.5 / mass * convdistance
+        y[i] += vy[i] * dt + fy[i] * dt * dt * 0.5 / mass * convdistance
+        z[i] += vz[i] * dt + fz[i] * dt * dt * 0.5 / mass * convdistance
+
+    # save the force at t
+    fx0 = fx
+    fy0 = fy
+    fz0 = fz
+    # update acceleration at t+dt
+    fx, fy, fz, epot, einter = forces.forceLJBond(
+        x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, b0, kb_di
+    )
+
+    # update the velocity
+    for i in prange(N):
+        vx[i] += 0.5 * dt * (fx[i] + fx0[i]) / mass * convvelocity
+        vy[i] += 0.5 * dt * (fy[i] + fy0[i]) / mass * convvelocity
+        vz[i] += 0.5 * dt * (fz[i] + fz0[i]) / mass * convvelocity
+
+    return x, y, z, vx, vy, vz, fx, fy, fz, epot, einter
+
+
 def VelocityVerlet_wall_z(
     x,
     y,
@@ -235,3 +294,42 @@ def KineticEnergy(vx, vy, vz, mass):
             0.5 * mass * (vx[i] * vx[i] + vy[i] * vy[i] + vz[i] * vz[i]) * convvelocity
         )
     return ekin
+
+
+@njit(parallel=True)
+def virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff):
+    i = 0
+    N = len(x)
+    vir = 0
+    for i in prange(N - 1):
+        j = i + 1
+        for j in prange(i + 1, N):
+            rijx = forces.pbc(x[i], x[j], xlo, xhi)
+            rijy = forces.pbc(y[i], y[j], ylo, yhi)
+            rijz = forces.pbc(z[i], z[j], zlo, zhi)
+
+            r2 = rijx * rijx + rijy * rijy + rijz * rijz
+            # calculate fx, fy, fz
+            if r2 < cutoff * cutoff:
+                sf2 = sigma * sigma / r2
+                sf6 = sf2 * sf2 * sf2
+                ff = 24.0 * eps * sf6 * (sf6 - 0.5) / r2
+                fx = -ff * rijx
+                fy = -ff * rijy
+                fz = -ff * rijz
+            else:
+                fx, fy, fz = 0, 0, 0
+
+            vir += rijx * fx + rijy * fy + rijz * fz
+
+    return vir
+
+
+def pressure(
+    x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff, vx, vy, vz, mass
+):
+    K = KineticEnergy(vx, vy, vz, mass)
+    vir = virial(x, y, z, xlo, xhi, ylo, yhi, zlo, zhi, eps, sigma, cutoff)
+    V = (xhi - xlo) * (yhi - ylo) * (zhi - zlo)
+    P = 1 / (3 * V) * (2 * K + vir)
+    return P
