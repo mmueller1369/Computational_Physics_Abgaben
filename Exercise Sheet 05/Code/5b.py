@@ -10,7 +10,6 @@ import numpy as np
 from tqdm import tqdm
 import os
 import force
-from numba import prange
 
 
 # -------------- Simulation ---------------#
@@ -19,8 +18,8 @@ start = time.time()
 # initialization of global variable
 settings.init()
 fileoutput = open(os.path.join(settings.path, f"trajectories_a.txt"), "w")
-filetemp = open(os.path.join(settings.path, f"temp_a.txt"), "w")
-filetemp.write("#step  T\n")
+filetemp = open(os.path.join(settings.path, f"temp_b.txt"), "w")
+filetemp.write("#step Temp\n")
 
 # create atomic locations and velocities + cancel linear momentum + rescale velocity to desired temperature
 x, y, z, vx, vy, vz = initialize.InitializeAtoms()
@@ -38,10 +37,9 @@ fx, fy, fz, epot = force.forceLJ(
 eps = 0.5 * settings.kb * settings.Tdesired
 settings.nsteps_production = 80000
 
+for step in tqdm(range(0, settings.nsteps_production), desc="Simulation"):
 
-for step in tqdm(prange(0, settings.nsteps_production), desc="Simulation"):
-
-    if step == settings.nsteps_production / 2:
+    if step == 40000:
         settings.Tdesired = 100
         eps = 0.5 * settings.kb * settings.Tdesired
 
@@ -68,15 +66,15 @@ for step in tqdm(prange(0, settings.nsteps_production), desc="Simulation"):
         mass,
     )
 
-    # if (
-    #     settings.thermostat == 1 and step % settings.n_thermostat == 0
-    # ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
-    #     Trandom = initialize.temperature(vx, vy, vz)
-    #     vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
-    #     Trandom1 = initialize.temperature(vx, vy, vz)
+    if (
+        settings.thermostat == 1 and step % settings.n_thermostat == 0
+    ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
+        Trandom = initialize.temperature(vx, vy, vz)
+        vx, vy, vz = initialize.rescalevelocity(vx, vy, vz, settings.Tdesired, Trandom)
+        Trandom1 = initialize.temperature(vx, vy, vz)
 
     if (
-        settings.thermostat == 2
+        settings.thermostat == 2 and step % settings.n_thermostat == 0
     ):  # rescaling of the temperature # the following lines should be defined as a routine in misc
         Trandom = initialize.temperature(vx, vy, vz)
         vx, vy, vz = initialize.berendsen_thermostat(
