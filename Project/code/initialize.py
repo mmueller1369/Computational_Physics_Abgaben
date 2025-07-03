@@ -22,7 +22,7 @@ def single(pert_length=0, pert_angle=0):
     x[2] = length * math.cos(angle)
     y[2] = length * math.sin(angle)
 
-    return x, y, z, vx, vy, vz
+    return x+1, y, z, vx, vy, vz
 
 
 def cubic_lattice():

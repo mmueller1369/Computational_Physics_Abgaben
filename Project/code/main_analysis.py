@@ -17,13 +17,15 @@ settings.init()
 # plt.legend()
 # plt.show()
 
-# energies = np.loadtxt(energyfile).T
-# plt.plot(energies[0], energies[3], label = "e_bond")
-# plt.plot(energies[0], energies[4], label = "e_angle")
-# plt.plot(energies[0], energies[5], label = "e_kin")
-# plt.plot(energies[0], np.sum(energies[1:], axis=0), label = "e_tot")
-# plt.legend()
-# plt.show()
+name = "pert_s_0.1"
+energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
+energies = np.loadtxt(energyfile).T
+plt.plot(energies[0], energies[3], label = "e_bond")
+plt.plot(energies[0], energies[4], label = "e_angle")
+plt.plot(energies[0], energies[5], label = "e_kin")
+plt.plot(energies[0], np.sum(energies[1:], axis=0), label = "e_tot")
+plt.legend()
+plt.show()
 
 def oscillation(t, A, omega, phi, offset):
     return A * np.cos(omega * t + phi) + offset

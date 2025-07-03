@@ -43,66 +43,73 @@ def forceH2O(
         sj = math.sqrt(sjx*sjx + sjy*sjy + sjz*sjz)
         sproj = six*sjx + siy*sjy + siz*sjz
         theta = math.acos(sproj/(si*sj))
+        # # calculating the bond forces which update the H and O-atom forces
+        fix = f_bond(six, si, k_bond, s0)
+        fiy = f_bond(siy, si, k_bond, s0)
+        fiz = f_bond(siz, si, k_bond, s0)
+        fjx = f_bond(sjx, sj, k_bond, s0)
+        fjy = f_bond(sjy, sj, k_bond, s0)
+        fjz = f_bond(sjz, sj, k_bond, s0)
         # # updating the forces
-        fx[i] += f_bond(i, x, si, k_bond, s0) + f_angle(i, j, x, si, sproj, theta, k_angle, theta0)
-        fy[i] += f_bond(i, y, si, k_bond, s0) + f_angle(i, j, y, si, sproj, theta, k_angle, theta0)
-        fz[i] += f_bond(i, z, si, k_bond, s0) + f_angle(i, j, z, si, sproj, theta, k_angle, theta0)
-        fx[j] += f_bond(j, x, sj, k_bond, s0) + f_angle(j, i, x, sj, sproj, theta, k_angle, theta0)
-        fy[j] += f_bond(j, y, sj, k_bond, s0) + f_angle(j, i, y, sj, sproj, theta, k_angle, theta0)
-        fz[j] += f_bond(j, z, sj, k_bond, s0) + f_angle(j, i, z, sj, sproj, theta, k_angle, theta0)
+        fx[o] -= fix + fjx
+        fy[o] -= fiy + fjy
+        fz[o] -= fiz + fjz
+        fx[i] += fix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
+        fy[i] += fiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
+        fz[i] += fiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
+        fx[j] += fjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
+        fy[j] += fjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
+        fz[j] += fjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
         # # updating the energies
         e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
 
         # intermolecular stuff
-        # for l in prange(o+3, N):
-        #     # # properties needed
-        #     rolx = x[l] - x[o]
-        #     roly = y[l] - y[o]
-        #     rolz = z[l] - z[o]
-        #     rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
-        #     # # determining absolute values of force (divided by rol) and energy
-        #     if rol < cutoff:
-        #         if l % 3 == 0:  # if l is an O-atom
-        #             ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
-        #             ql = qO
-        #         else:
-        #             ff_LJol, e_LJol = 0, 0
-        #             ql = qH
-        #         ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
-        #     else:
-        #         ff_LJol, e_LJol = 0, 0
-        #         ff_coulol, e_coulol = 0, 0
-        #     ff_inter = ff_LJol + ff_coulol
-        #     # # updating the forces
-        #     fx[o] -= ff_inter * rolx
-        #     fy[o] -= ff_inter * roly
-        #     fz[o] -= ff_inter * rolz
-        #     fx[l] += ff_inter * rolx
-        #     fy[l] += ff_inter * roly
-        #     fz[l] += ff_inter * rolz
-        #     # # updating the energies
-        #     e_LJ += e_LJol - e_LJ_cut
-        #     e_coul += e_coulol
+        for l in prange(o+3, N):
+            # # properties needed
+            rolx = x[l] - x[o]
+            roly = y[l] - y[o]
+            rolz = z[l] - z[o]
+            rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
+            # # determining absolute values of force (divided by rol) and energy
+            if rol < cutoff:
+                if l % 3 == 0:  # if l is an O-atom
+                    ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
+                    ql = qO
+                else:
+                    ff_LJol, e_LJol = 0, 0
+                    ql = qH
+                ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
+            else:
+                ff_LJol, e_LJol = 0, 0
+                ff_coulol, e_coulol = 0, 0
+            ff_inter = ff_LJol + ff_coulol
+            # # updating the forces
+            fx[o] -= ff_inter * rolx
+            fy[o] -= ff_inter * roly
+            fz[o] -= ff_inter * rolz
+            fx[l] += ff_inter * rolx
+            fy[l] += ff_inter * roly
+            fz[l] += ff_inter * rolz
+            # # updating the energies
+            e_LJ += e_LJol - e_LJ_cut
+            e_coul += e_coulol
         
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
 
 
 @njit
-def f_bond(i, pos, si, k_bond, s0):
-    svec = pos[i]
+def f_bond(svec, si, k_bond, s0):
     ff = k_bond * (1 - s0/si)
-    return -ff*svec
+    return ff*svec
 
 
 @njit
-def f_angle(i, j, pos, si, sproj, theta, k_angle, theta0):
-    sveci = pos[i]
-    svecj = pos[j]
+def f_angle(sveci, svecj, si, sproj, theta, k_angle, theta0):
     prefac = k_angle * (theta - theta0) / math.tanh(theta)
     vectorial = svecj/sproj - sveci/(2*si**2)
-    return -prefac*vectorial
+    return prefac*vectorial
 
 
 @njit
