@@ -43,8 +43,6 @@ def init():
     # molecule properties
     global nmol # total number of molecules
     nmol = ini_x * ini_y * ini_z
-    global n_dof_mol # degrees of freedom per H2O molecule
-    n_dof_mol = 9 # 3*3*3 = 9 translational, bonds and angles not fixed
     global rho
     rho = 1  # molecules/sigma^-3
     global masses # array might seem inelegant, but speeds up the code
@@ -54,11 +52,11 @@ def init():
 
     # bounds
     xlo = 0
-    xhi = (ini_x + 1)*a_lat
+    xhi = ini_x * a_lat
     ylo = 0
-    yhi = (ini_y + 1)*a_lat
+    yhi = ini_y * a_lat
     zlo = 0
-    zhi = (ini_z + 1)*a_lat
+    zhi = ini_z * a_lat
     global bounds
     bounds = np.array([[xlo, xhi], [ylo, yhi], [zlo, zhi]])
 
@@ -101,7 +99,7 @@ def init():
     # ------  conversion factor ------ #
     global conv_factor # from g/mole*nm^2/fs^2 to kcal/mole (energies)
                        # or from g/mole*nm/fs^2 to kcal/mole/nm (forces)
-    conv_factor = 2.390057361e5                                
+    conv_factor = 2.390057361e5
 
 
 

@@ -34,7 +34,7 @@ def run_simulation(
     ## get the force and thermostat function
     force_func = getattr(forces, f"force{force}")
     if thermostat:
-        thermostat_func = getattr(tools, thermostat)
+        thermostat_func = getattr(tools, f"{thermostat}Thermostat")
     ## initialize the histogram if needed
     if rdffile:
         n_bins = settings.rmax_hist//settings.dr_hist

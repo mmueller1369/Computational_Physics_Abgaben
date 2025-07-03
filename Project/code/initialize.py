@@ -44,10 +44,12 @@ def cubic_lattice():
                 oz = nz * settings.a_lat + settings.a_lat / 2.0
                 # creating first random vector v1
                 v1 = np.random.rand(3)
+                v1 *= random.choice([-1, 1]) # randomize sign for full sphere
                 v1 /= np.linalg.norm(v1)
                 v1 *= settings.s0 * math.cos(settings.theta0/2)
                 # creating second random vector which yields v2 orthogonal to v1
                 v2_helper = np.random.rand(3)
+                v2_helper *= random.choice([-1, 1])
                 v2 = np.cross(v1, v2_helper)
                 v2 /= np.linalg.norm(v2)
                 v2 *= settings.s0 * math.sin(settings.theta0/2)

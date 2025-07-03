@@ -55,35 +55,35 @@ def forceH2O(
         e_angle += k_angle/2 * (theta - theta0)**2
 
         # intermolecular stuff
-        for l in prange(o+3, N):
-            # # properties needed
-            rolx = x[l] - x[o]
-            roly = y[l] - y[o]
-            rolz = z[l] - z[o]
-            rol = math.sqrt(rolx**rolx + roly**roly + rolz**rolz)
-            # # determining absolute values of force (divided by rol) and energy
-            if rol > cutoff:
-                if l % 3 == 0:  # if l is an O-atom
-                    ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
-                    ql = qO
-                else:
-                    ff_LJol, e_LJol = 0, 0
-                    ql = qH
-                ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
-            else:
-                ff_LJol, e_LJol = 0, 0
-                ff_coulol, e_coulol = 0, 0
-            ff_inter = ff_LJol + ff_coulol
-            # # updating the forces
-            fx[o] -= ff_inter * rolx
-            fy[o] -= ff_inter * roly
-            fz[o] -= ff_inter * rolz
-            fx[l] += ff_inter * rolx
-            fy[l] += ff_inter * roly
-            fz[l] += ff_inter * rolz
-            # # updating the energies
-            e_LJ += e_LJol - e_LJ_cut
-            e_coul += e_coulol
+        # for l in prange(o+3, N):
+        #     # # properties needed
+        #     rolx = x[l] - x[o]
+        #     roly = y[l] - y[o]
+        #     rolz = z[l] - z[o]
+        #     rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
+        #     # # determining absolute values of force (divided by rol) and energy
+        #     if rol < cutoff:
+        #         if l % 3 == 0:  # if l is an O-atom
+        #             ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
+        #             ql = qO
+        #         else:
+        #             ff_LJol, e_LJol = 0, 0
+        #             ql = qH
+        #         ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
+        #     else:
+        #         ff_LJol, e_LJol = 0, 0
+        #         ff_coulol, e_coulol = 0, 0
+        #     ff_inter = ff_LJol + ff_coulol
+        #     # # updating the forces
+        #     fx[o] -= ff_inter * rolx
+        #     fy[o] -= ff_inter * roly
+        #     fz[o] -= ff_inter * rolz
+        #     fx[l] += ff_inter * rolx
+        #     fy[l] += ff_inter * roly
+        #     fz[l] += ff_inter * rolz
+        #     # # updating the energies
+        #     e_LJ += e_LJol - e_LJ_cut
+        #     e_coul += e_coulol
         
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
@@ -109,9 +109,10 @@ def f_angle(i, j, pos, si, sproj, theta, k_angle, theta0):
 def ffe_LJ(rol, sigma, eps):
     prefac = 24*eps / rol
     base = sigma/rol
-    base6 = base**6
-    ff_LJol = prefac * (2*base6**2 - base6) / rol
-    e_LJol = 4*eps * (base6**2 - base6)
+    base2 = base*base
+    base6 = base2*base2*base2
+    ff_LJol = prefac * base6 * (2*base6 - 1) / rol
+    e_LJol = 4*eps * base6 * (base6 - 1)
     return ff_LJol, e_LJol
 
 
