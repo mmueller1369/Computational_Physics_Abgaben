@@ -26,9 +26,9 @@ def forceH2O(
     e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
 
     for mol in prange(N//3):
-        # attributing the atom indice
-        o = 3*mol  # index of O-atom
-        i = 3*mol + 1  # indice of first and second H-atom
+        # attributing indices
+        o = 3*mol
+        i = 3*mol + 1
         j = 3*mol + 2
 
         # intramolecular stuff
@@ -65,36 +65,40 @@ def forceH2O(
         e_angle += k_angle/2 * (theta - theta0)**2
 
         # intermolecular stuff
-        for l in prange(o+3, N):
-            # # properties needed
-            rolx = x[l] - x[o]
-            roly = y[l] - y[o]
-            rolz = z[l] - z[o]
-            rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
-            # # determining absolute values of force (divided by rol) and energy
-            if rol < cutoff:
-                if l % 3 == 0:  # if l is an O-atom
-                    ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
-                    ql = qO
-                else:
-                    ff_LJol, e_LJol = 0, 0
-                    ql = qH
-                ff_coulol, e_coulol = ffe_coul(rol, qO, ql, eps0_el, alpha, cutoff, gamma_cut)
-            else:
-                ff_LJol, e_LJol = 0, 0
-                ff_coulol, e_coulol = 0, 0
-            ff_inter = ff_LJol + ff_coulol
-            # # updating the forces
-            fx[o] -= ff_inter * rolx
-            fy[o] -= ff_inter * roly
-            fz[o] -= ff_inter * rolz
-            fx[l] += ff_inter * rolx
-            fy[l] += ff_inter * roly
-            fz[l] += ff_inter * rolz
-            # # updating the energies
-            e_LJ += e_LJol - e_LJ_cut
-            e_coul += e_coulol
-        
+        for atom1, q1 in zip([o, i, j], [qO, qH, qH]):
+            for atom2 in prange(atom1+1, N):
+                # only consider interactions between atoms of different molecules
+                if atom2//3 != mol:
+                    # # properties needed
+                    rolx = x[atom2] - x[atom1]
+                    roly = y[atom2] - y[atom1]
+                    rolz = z[atom2] - z[atom1]
+                    rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
+                    # # only for distances smaller than cutoff
+                    if rol < cutoff:
+                        # # LJ only for O-O
+                        if atom1%3 == 0 and atom2%3 == 0:
+                            ff_LJol, e_LJol = ffe_LJ(rol, sigma, eps)
+                        else:
+                            ff_LJol, e_LJol = 0, 0
+                        # # Coulomb interaction for all
+                        q2 = qO if atom2 % 3 == 0 else qH
+                        ff_coulol, e_coulol = ffe_coul(rol, q1, q2, eps0_el,
+                                                       alpha, cutoff, gamma_cut)
+                    else:
+                        ff_LJol, e_LJol = 0, 0
+                        ff_coulol, e_coulol = 0, 0
+                    ff_inter = ff_LJol + ff_coulol
+                    # update forces
+                    fx[atom1] -= ff_inter * rolx
+                    fy[atom1] -= ff_inter * roly
+                    fz[atom1] -= ff_inter * rolz
+                    fx[atom2] += ff_inter * rolx
+                    fy[atom2] += ff_inter * roly
+                    fz[atom2] += ff_inter * rolz
+                    # update energies
+                    e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
+                    e_coul += e_coulol
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
 
@@ -115,7 +119,7 @@ def f_angle(sveci, svecj, si, sproj, theta, k_angle, theta0):
 @njit
 def ffe_LJ(rol, sigma, eps):
     prefac = 24*eps / rol
-    base = sigma/rol
+    base = sigma / rol
     base2 = base*base
     base6 = base2*base2*base2
     ff_LJol = prefac * base6 * (2*base6 - 1) / rol
@@ -129,7 +133,7 @@ def ffe_coul(rol, qo, ql, eps0_el, alpha, cutoff, gamma_cut):
     ff_coulol = prefac * (gamma(rol, alpha) - gamma_cut) / rol
     erfcrol = math.erfc(alpha*rol) / rol
     erfccut = math.erfc(alpha*cutoff) / cutoff
-    e_coulol = prefac * (erfcrol - erfccut + gamma_cut*(rol*cutoff))
+    e_coulol = prefac * (erfcrol - erfccut + gamma_cut*(rol - cutoff))
     return ff_coulol, e_coulol
 
 

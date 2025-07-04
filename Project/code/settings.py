@@ -34,9 +34,9 @@ def init():
     global ini_x # H2O molecules initially in x, y, z directions
     ini_x = 6
     global ini_y
-    ini_y = 6
+    ini_y = ini_x
     global ini_z
-    ini_z = 6
+    ini_z = ini_x
     global a_lat # initial latice spacing
     a_lat = 0.321 # = sigma, nm
 
@@ -90,7 +90,7 @@ def init():
     global qH
     qH = 0.42 # e
     global eps0_el
-    eps0_el = 5.727657501e8 # e^2fs^2/(g/mole)/nm^3
+    eps0_el = 2.39451898e-3 # e^2/(kcal/mole)/nm
     global alpha
     alpha = 1/cutoff # 1/nm
 
@@ -105,7 +105,7 @@ def init():
 
     # ------ histogram properties ------ #
     global rmax_hist # maximum distance for histogram
-    rmax_hist = 20*sigma # nm
+    rmax_hist = xhi / 2 # nm
     global dr_hist # width of the histogram bins
     dr_hist = 0.3*sigma # nm
 
