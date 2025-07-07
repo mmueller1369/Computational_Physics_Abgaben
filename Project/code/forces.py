@@ -1,7 +1,6 @@
 import numpy as np
 from numba import njit, prange
 import math
-import settings
 
 
 @njit(parallel=True)
@@ -16,10 +15,10 @@ def forceH2O(
     fz = np.zeros(shape=len(x))
     N = len(x)
 
-    e_LJ = 0
-    e_coul = 0
-    e_bond = 0
-    e_angle = 0
+    e_LJ = 0.0
+    e_coul = 0.0
+    e_bond = 0.0
+    e_angle = 0.0
 
     c2 = sigma * sigma / cutoff / cutoff
     c6 = c2 * c2 * c2
@@ -44,22 +43,22 @@ def forceH2O(
         sproj = six*sjx + siy*sjy + siz*sjz
         theta = math.acos(sproj/(si*sj))
         # # calculating the bond forces which update the H and O-atom forces
-        fix = f_bond(six, si, k_bond, s0)
-        fiy = f_bond(siy, si, k_bond, s0)
-        fiz = f_bond(siz, si, k_bond, s0)
-        fjx = f_bond(sjx, sj, k_bond, s0)
-        fjy = f_bond(sjy, sj, k_bond, s0)
-        fjz = f_bond(sjz, sj, k_bond, s0)
+        f_bondix = f_bond(six, si, k_bond, s0)
+        f_bondiy = f_bond(siy, si, k_bond, s0)
+        f_bondiz = f_bond(siz, si, k_bond, s0)
+        f_bondjx = f_bond(sjx, sj, k_bond, s0)
+        f_bondjy = f_bond(sjy, sj, k_bond, s0)
+        f_bondjz = f_bond(sjz, sj, k_bond, s0)
         # # updating the forces
-        fx[o] -= fix + fjx
-        fy[o] -= fiy + fjy
-        fz[o] -= fiz + fjz
-        fx[i] += fix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
-        fy[i] += fiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
-        fz[i] += fiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
-        fx[j] += fjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
-        fy[j] += fjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
-        fz[j] += fjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
+        fx[o] = -(f_bondix + f_bondjx)
+        fy[o] = -(f_bondiy + f_bondjy)
+        fz[o] = -(f_bondiz + f_bondjz)
+        fx[i] += f_bondix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
+        fy[i] += f_bondiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
+        fz[i] += f_bondiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
+        fx[j] += f_bondjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
+        fy[j] += f_bondjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
+        fz[j] += f_bondjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
         # # updating the energies
         e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
@@ -111,8 +110,8 @@ def f_bond(svec, si, k_bond, s0):
 
 @njit
 def f_angle(sveci, svecj, si, sproj, theta, k_angle, theta0):
-    prefac = k_angle * (theta - theta0) / math.tanh(theta)
-    vectorial = svecj/sproj - sveci/(2*si**2)
+    prefac = - k_angle * (theta - theta0) / math.tan(theta)
+    vectorial = svecj/sproj - sveci/si**2
     return prefac*vectorial
 
 
