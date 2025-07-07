@@ -53,12 +53,12 @@ def forceH2O(
         fx[o] = -(f_bondix + f_bondjx)
         fy[o] = -(f_bondiy + f_bondjy)
         fz[o] = -(f_bondiz + f_bondjz)
-        fx[i] += f_bondix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
-        fy[i] += f_bondiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
-        fz[i] += f_bondiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
-        fx[j] += f_bondjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
-        fy[j] += f_bondjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
-        fz[j] += f_bondjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
+        fx[i] = f_bondix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
+        fy[i] = f_bondiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
+        fz[i] = f_bondiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
+        fx[j] = f_bondjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
+        fy[j] = f_bondjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
+        fz[j] = f_bondjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
         # # updating the energies
         e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
@@ -113,6 +113,7 @@ def f_angle(sveci, svecj, si, sproj, theta, k_angle, theta0):
     prefac = - k_angle * (theta - theta0) / math.tan(theta)
     vectorial = svecj/sproj - sveci/si**2
     return prefac*vectorial
+    # return 0
 
 
 @njit

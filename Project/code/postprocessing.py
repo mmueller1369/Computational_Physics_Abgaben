@@ -8,14 +8,7 @@ import settings
 settings.init()
 
 
-@njit(parallel=True)
-def read_data(filename, mode='position'):
-    if mode == 'position':
-        add = 0
-    if mode == 'velocity':
-        add = 3
-    if mode == 'force':
-        add = 6
+def read_data(filename, mode='Position'):
     pipeline = import_file(filename)
     n_steps = pipeline.source.num_frames
     data0 = pipeline.compute(0)
@@ -24,13 +17,13 @@ def read_data(filename, mode='position'):
     x = np.zeros((n_steps, n_particles))
     y = np.zeros((n_steps, n_particles))
     z = np.zeros((n_steps, n_particles))
-    for step in prange(n_steps):
+    for step in range(n_steps):
         steps[step] = step
         data = pipeline.compute(step)
-        pos = data.particles['Position'][:]  # shape (n_particles, 3)
-        x[step, :] = pos[:, 0 + add]
-        y[step, :] = pos[:, 1 + add]
-        z[step, :] = pos[:, 2 + add]
+        pos = data.particles[mode][:]  # shape (n_particles, 3)
+        x[step, :] = pos[:, 0]
+        y[step, :] = pos[:, 1]
+        z[step, :] = pos[:, 2]
     return steps, x, y, z
 
 
@@ -106,7 +99,7 @@ def measure_rho(x_step, y_step, z_step, masses, mode = "O"):
     for i in prange(int(settings.rmax_hist / settings.dr_hist)):
         r = i*settings.dr_hist
         volumes[i] = 4/3*np.pi * ((r + settings.dr_hist)**3 - r**3)
-        
+
     return hist/volumes
 
 
