@@ -53,9 +53,9 @@ execute.run_simulation(
     steps=100000,
     thermostat="Berendsen",
     thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
-    trajfile=f"part_2/test_traj",
-    tempfile=f"part_2/test_temp",
-    energyfile=f"part_2/test_energy",
+    trajfile=f"part_2/test_para_traj",
+    tempfile=f"part_2/test_para_temp",
+    energyfile=f"part_2/test_para_energy",
     n_save=10,
-    simulation_name=f"Part 2 - test",
+    simulation_name=f"Part 2 - test para",
 )

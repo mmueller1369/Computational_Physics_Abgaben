@@ -13,6 +13,12 @@ def forceH2O(
     fx = np.zeros(shape=len(x))
     fy = np.zeros(shape=len(x))
     fz = np.zeros(shape=len(x))
+    fx_inter = np.zeros(shape=len(x))
+    fy_inter = np.zeros(shape=len(x))
+    fz_inter = np.zeros(shape=len(x))
+    fx_intra = np.zeros(shape=len(x))
+    fy_intra = np.zeros(shape=len(x))
+    fz_intra = np.zeros(shape=len(x))
     N = len(x)
 
     e_LJ = 0.0
@@ -24,7 +30,7 @@ def forceH2O(
     c6 = c2 * c2 * c2
     e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
 
-    for mol in range(N//3):
+    for mol in prange(N//3):
         # attributing indices
         o = 3*mol
         i = 3*mol + 1
@@ -56,15 +62,15 @@ def forceH2O(
         f_anglejy = f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
         f_anglejz = f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
         # # updating the forces
-        fx[o] -= (f_bondix + f_bondjx + f_angleix + f_anglejx)
-        fy[o] -= (f_bondiy + f_bondjy + f_angleiy + f_anglejy)
-        fz[o] -= (f_bondiz + f_bondjz + f_angleiz + f_anglejz)
-        fx[i] += f_bondix + f_angleix
-        fy[i] += f_bondiy + f_angleiy
-        fz[i] += f_bondiz + f_angleiz
-        fx[j] += f_bondjx + f_anglejx
-        fy[j] += f_bondjy + f_anglejy
-        fz[j] += f_bondjz + f_anglejz
+        fx_intra[o] = -(f_bondix + f_bondjx + f_angleix + f_anglejx)
+        fy_intra[o] = -(f_bondiy + f_bondjy + f_angleiy + f_anglejy)
+        fz_intra[o] = -(f_bondiz + f_bondjz + f_angleiz + f_anglejz)
+        fx_intra[i] = f_bondix + f_angleix
+        fy_intra[i] = f_bondiy + f_angleiy
+        fz_intra[i] = f_bondiz + f_angleiz
+        fx_intra[j] = f_bondjx + f_anglejx
+        fy_intra[j] = f_bondjy + f_anglejy
+        fz_intra[j] = f_bondjz + f_anglejz
         # # updating the energies
         e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
@@ -95,15 +101,19 @@ def forceH2O(
                         ff_coulol, e_coulol = 0, 0
                     ff_inter = ff_LJol + ff_coulol
                     # update forces
-                    fx[atom1] -= ff_inter * rolx
-                    fy[atom1] -= ff_inter * roly
-                    fz[atom1] -= ff_inter * rolz
-                    fx[atom2] += ff_inter * rolx
-                    fy[atom2] += ff_inter * roly
-                    fz[atom2] += ff_inter * rolz
+                    fx_inter[atom1] -= ff_inter * rolx
+                    fy_inter[atom1] -= ff_inter * roly
+                    fz_inter[atom1] -= ff_inter * rolz
+                    fx_inter[atom2] += ff_inter * rolx
+                    fy_inter[atom2] += ff_inter * roly
+                    fz_inter[atom2] += ff_inter * rolz
                     # update energies
                     e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
                     e_coul += e_coulol
+    for i in prange(N):
+        fx[i] = fx_intra[i] + fx_inter[i]
+        fy[i] = fy_intra[i] + fy_inter[i]
+        fz[i] = fz_intra[i] + fz_inter[i]
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
 

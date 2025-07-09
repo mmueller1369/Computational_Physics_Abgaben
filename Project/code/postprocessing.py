@@ -27,6 +27,12 @@ def read_data(filename, mode='Position'):
     return steps, x, y, z
 
 
+# pipeline: delete outside cluster
+# ausrichtung by distance
+# overall asphericity
+# molecule in droplet over time
+
+
 @njit(parallel=True)
 def calculate_molecule_properties(x, y, z):
     nmol = x.shape[1] // 3
