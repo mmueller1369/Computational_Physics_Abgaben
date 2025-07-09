@@ -24,7 +24,7 @@ def forceH2O(
     c6 = c2 * c2 * c2
     e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
 
-    for mol in prange(N//3):
+    for mol in range(N//3):
         # attributing indices
         o = 3*mol
         i = 3*mol + 1
@@ -49,16 +49,22 @@ def forceH2O(
         f_bondjx = f_bond(sjx, sj, k_bond, s0)
         f_bondjy = f_bond(sjy, sj, k_bond, s0)
         f_bondjz = f_bond(sjz, sj, k_bond, s0)
+        f_angleix = f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
+        f_angleiy = f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
+        f_angleiz = f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
+        f_anglejx = f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
+        f_anglejy = f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
+        f_anglejz = f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
         # # updating the forces
-        fx[o] = -(f_bondix + f_bondjx)
-        fy[o] = -(f_bondiy + f_bondjy)
-        fz[o] = -(f_bondiz + f_bondjz)
-        fx[i] = f_bondix + f_angle(six, sjx, si, sproj, theta, k_angle, theta0)
-        fy[i] = f_bondiy + f_angle(siy, sjy, si, sproj, theta, k_angle, theta0)
-        fz[i] = f_bondiz + f_angle(siz, sjz, si, sproj, theta, k_angle, theta0)
-        fx[j] = f_bondjx + f_angle(sjx, six, sj, sproj, theta, k_angle, theta0)
-        fy[j] = f_bondjy + f_angle(sjy, siy, sj, sproj, theta, k_angle, theta0)
-        fz[j] = f_bondjz + f_angle(sjz, siz, sj, sproj, theta, k_angle, theta0)
+        fx[o] -= (f_bondix + f_bondjx + f_angleix + f_anglejx)
+        fy[o] -= (f_bondiy + f_bondjy + f_angleiy + f_anglejy)
+        fz[o] -= (f_bondiz + f_bondjz + f_angleiz + f_anglejz)
+        fx[i] += f_bondix + f_angleix
+        fy[i] += f_bondiy + f_angleiy
+        fz[i] += f_bondiz + f_angleiz
+        fx[j] += f_bondjx + f_anglejx
+        fy[j] += f_bondjy + f_anglejy
+        fz[j] += f_bondjz + f_anglejz
         # # updating the energies
         e_bond += k_bond/2 * ((si - s0)**2 + (sj - s0)**2)
         e_angle += k_angle/2 * (theta - theta0)**2
@@ -113,7 +119,6 @@ def f_angle(sveci, svecj, si, sproj, theta, k_angle, theta0):
     prefac = - k_angle * (theta - theta0) / math.tan(theta)
     vectorial = svecj/sproj - sveci/si**2
     return prefac*vectorial
-    # return 0
 
 
 @njit
@@ -125,6 +130,7 @@ def ffe_LJ(rol, sigma, eps):
     ff_LJol = prefac * base6 * (2*base6 - 1) / rol
     e_LJol = 4*eps * base6 * (base6 - 1)
     return ff_LJol, e_LJol
+    # return 0, 0
 
 
 @njit
@@ -135,6 +141,7 @@ def ffe_coul(rol, qo, ql, eps0_el, alpha, cutoff, gamma_cut):
     erfccut = math.erfc(alpha*cutoff) / cutoff
     e_coulol = prefac * (erfcrol - erfccut + gamma_cut*(rol - cutoff))
     return ff_coulol, e_coulol
+    # return 0, 0
 
 
 @njit

@@ -66,9 +66,9 @@ def cubic_lattice():
                 y[n+2] = oy + v1[1] - v2[1]
                 z[n+2] = oz + v1[2] - v2[2]
                 # same initial velocity in same molecule
-                vx0 = 0.5 - random.randint(0, 1)
-                vy0 = 0.5 - random.randint(0, 1)
-                vz0 = 0.5 - random.randint(0, 1)
+                vx0 = 0.5 - np.random.rand()
+                vy0 = 0.5 - np.random.rand()
+                vz0 = 0.5 - np.random.rand()
                 vx[n] = vx0
                 vy[n] = vy0
                 vz[n] = vz0
@@ -83,9 +83,13 @@ def cubic_lattice():
     pbar.close()
 
     # cancel the linear momentum
-    vx -= np.sum(vx) / settings.nmol
-    vy -= np.sum(vy) / settings.nmol
-    vz -= np.sum(vz) / settings.nmol
+    total_mass = np.sum(settings.masses)
+    vx_com = np.sum(vx * settings.masses) / total_mass
+    vy_com = np.sum(vy * settings.masses) / total_mass
+    vz_com = np.sum(vz * settings.masses) / total_mass
+    vx -= vx_com
+    vy -= vy_com
+    vz -= vz_com
 
     # rescale the velocity to the desired temperature
     Trandom = tools.computeTemperature(vx, vy, vz, settings.masses)

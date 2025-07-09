@@ -34,9 +34,21 @@ def WriteTrajectory(file, itime, x, y, z, vx, vy, vz, fx, fy, fz):
     file.write("%e %e \n" % (settings.bounds[2,0], settings.bounds[2,1]))
 
     file.write("ITEM: ATOMS id type x y z vx vy vz fx fy fz\n")
+    # for i in range(natoms):
+    #     itype = "O" if i%3 == 0 else "H"
+    #     file.write(
+    #         "%i %s %e %e %e %e %e %e %e %e %e\n"
+    #         % (i, itype, x[i], y[i], z[i], vx[i], vy[i], vz[i], fx[i], fy[i], fz[i])
+    #     )
     for i in range(natoms):
-        itype = "O" if i%3 == 0 else "H"
-        file.write(
-            "%i %s %e %e %e %e %e %e %e %e %e\n"
-            % (i, itype, x[i], y[i], z[i], vx[i], vy[i], vz[i], fx[i], fy[i], fz[i])
-        )
+        if i%3 == 0:
+            file.write(
+                "%i %s %e %e %e %e %e %e %e %e %e\n"
+                % (i, "O", x[i], y[i], z[i], vx[i], vy[i], vz[i], fx[i], fy[i], fz[i])
+            )
+        else:
+            file.write(
+                "%i %s %e %e %e %e %e %e %e %e %e\n"
+                % (i, "H", x[i], y[i], z[i], 0, 0, 0, fx[i], fy[i], fz[i])
+            )
+        

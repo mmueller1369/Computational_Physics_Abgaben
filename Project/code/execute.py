@@ -47,6 +47,11 @@ def run_simulation(
 
     # conduct the run
     for step in tqdm(prange(0, steps), desc=simulation_name):
+
+        # print(f"Summe fx at step {step}:", np.sum(fx))
+        # print(f"Summe fy at step {step}:", np.sum(fy))
+        # print(f"Summe fz at step {step}:", np.sum(fz))
+
         ## save the specified parameters of the current state
         if step % n_save == 0:
             save_specified_properties(trajfile, tempfile, energyfile, rdffile,

@@ -20,10 +20,13 @@ settings.init()
 name = "pert_b_0.1"
 energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
 energies = np.loadtxt(energyfile).T
-plt.plot(energies[0], energies[3], label = r"$E_{bond}$")
-plt.plot(energies[0], energies[4], label = r"$E_{angle}$")
-plt.plot(energies[0], energies[5], label = r"$E_{kin}$")
-plt.plot(energies[0], np.sum(energies[1:], axis=0), label = r"$E_{tot}$")
+plt.plot(energies[0]*0.5, energies[3], label = r"$E_{bond}$")
+plt.plot(energies[0]*0.5, energies[4], label = r"$E_{angle}$")
+plt.plot(energies[0]*0.5, energies[5], label = r"$E_{kin}$")
+plt.plot(energies[0]*0.5, np.sum(energies[1:], axis=0), label = r"$E_{tot}$")
+plt.title(f'Energies for file {name}')
+plt.xlabel(r"$t$ [fs]")
+plt.ylabel(r"$E$ [kcal/mole]")
 plt.legend()
 plt.show()
 
