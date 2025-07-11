@@ -29,6 +29,8 @@ def init():
     tau = 500*deltat # fs
     global kb  # boltzmann's constant
     kb = 1.38e-23 # 1.9872036e-3 # kcal/mole/K
+    N_A = 6.022140857e23
+    e = 1.602176621e-19
 
     # initialization
     global ini_x # H2O molecules initially in x, y, z directions
@@ -46,7 +48,7 @@ def init():
     global rho
     rho = 1  # molecules/sigma^-3
     global masses # array might seem inelegant, but speeds up the code
-    massH = 1.6735e-27 # 1.007805272 # g/mole ...................................nochmal checken
+    massH = 1.6735e-27 # 1.007805272 # g/mole
     massO = 2.6561e-26 # 15.99540833 # g/mole
     masses = np.tile([massO, massH, massH], nmol)
 
@@ -67,12 +69,12 @@ def init():
     # intramolecular potential
     ## bonds
     global k_bond
-    k_bond = 4184/6.02214086e23 / 1e-20 * 1058.0 # 1.058e5 # kcal/mole/nm^2
+    k_bond = 4184 / N_A / 1e-20 * 1058.0 # 1.058e5 # kcal/mole/nm^2
     global s0
     s0 = 0.1e-9 # 0.1 # nm
     ## angles
     global k_angle
-    k_angle = 4184/6.02214086e23 * 75.0 # 75.0 # kcal/mole/rad^2
+    k_angle = 4184 / N_A * 75.0 # 75.0 # kcal/mole/rad^2
     global theta0
     theta0 = 104.5 * np.pi/180 # rad
 
@@ -86,9 +88,9 @@ def init():
     cutoff = 2.5*sigma # nm
     ## Coulomb
     global qO
-    qO = -0.84 * 1.602176634e-19 # -0.84 # e
+    qO = -0.84 * e # -0.84 # e
     global qH
-    qH = 0.42 * 1.602176634e-19 # 0.42 # e
+    qH = 0.42 * e # 0.42 # e
     global eps0_el
     eps0_el = 8.8541878188e-12 # 2.39451898e-3 # e^2/(kcal/mole)/nm
     global alpha
@@ -100,6 +102,16 @@ def init():
     global conv_factor # from g/mole*nm^2/fs^2 to kcal/mole (energies)
                        # or from g/mole*nm/fs^2 to kcal/mole/nm (forces)
     conv_factor = 1 # 2.390057361e5
+    global conv_length
+    conv_length = 1e9 # m to nm
+    global conv_velocity
+    conv_velocity = 1e-6 # 1e9 / 1e15 # m/s to nm/fs
+    global conv_mass
+    conv_mass = 1e3 * N_A # kg to g/mole
+    global conv_energy
+    conv_energy = 1 / 4184 * N_A # J to kcal/mole
+    global conv_force
+    conv_force = conv_energy / conv_length # J/m to kcal/mole/nm
 
 
 

@@ -4,7 +4,9 @@ import os
 import numpy as np
 from numba import njit, prange
 from ovito.io import import_file
+import ovito.modifiers as om
 import settings
+# import settings_SI as settings
 settings.init()
 
 
@@ -27,7 +29,28 @@ def read_data(filename, mode='Position'):
     return steps, x, y, z
 
 
-# pipeline: delete outside cluster
+def make_pipeline_droplet(filename, cutoff):
+    pipeline = import_file(filename)
+    pipeline.modifiers.append(om.ClusterAnalysisModifier(cutoff=cutoff,
+                                                         sort_by_size=True,
+                                                         unwrap_particles=True,
+                                                         compute_com=True,
+                                                         compute_gyration=True))
+    pipeline.modifiers.append(om.ExpressionSelectionModifier(expression="Cluster != 1"))
+    pipeline.modifiers.append(om.DeleteSelectedModifier())
+    
+    def DeleteIncompleteMoleculesModifier(frame, data):
+        molIDs = np.unique(data.particles['Molecule Identifier'][...])
+        for molID in molIDs:
+            if np.sum(data.particles['Molecule Identifier'] == molID) != 3:
+                om.ExpressionSelectionModifier(
+                    expression=f"Molecule Identifier == {molID}").modify(frame, data)
+                om.DeleteSelectedModifier().modify(frame, data)
+    pipeline.modifiers.append(DeleteIncompleteMoleculesModifier)
+
+    return pipeline
+
+
 # ausrichtung by distance
 # overall asphericity
 # molecule in droplet over time
@@ -65,38 +88,117 @@ def calculate_molecule_properties(x, y, z):
 
 
 @njit(parallel=True)
-def calculate_com(x_step, y_step, z_step, masses):
-    total_mass = np.sum(masses)
+def calculate_com(pipeline, step, data=False):
+    if not data:
+        data = pipeline.compute(step)
+    total_mass = np.sum(data.particles.masses)
     tot_x = 0
     tot_y = 0
     tot_z = 0
-    for i in prange(len(masses)):
-        tot_x += x_step[i] * masses[i]
-        tot_y += y_step[i] * masses[i]
-        tot_z += z_step[i] * masses[i]
+    for i in prange(data.particles.count):
+        tot_x += data.particles.position.T[0, i] * data.particles.masses[i]
+        tot_y += data.particles.position.T[1, i] * data.particles.masses[i]
+        tot_z += data.particles.position.T[2, i] * data.particles.masses[i]
     com_x = tot_x / total_mass
     com_y = tot_y / total_mass
     com_z = tot_z / total_mass
     return com_x, com_y, com_z
 
 
-@njit(parallel=True)
-def measure_rho(x_step, y_step, z_step, masses, mode = "O"):
-    com_x, com_y, com_z = calculate_com(x_step, y_step, z_step, masses)
-    if mode == "O":
-        # O atoms are at indices 0, 3, 6, ...
-        x_at = x_step[::3] - com_x
-        y_at = y_step[::3] - com_y
-        z_at = z_step[::3] - com_z
-    if mode == "H":
-        # H atoms are at indices 1,2, 4,5, 7,8, ...
-        x_at = np.concatenate((x_step[1::3], x_step[2::3])) - com_x
-        y_at = np.concatenate((y_step[1::3], y_step[2::3])) - com_y
-        z_at = np.concatenate((z_step[1::3], z_step[2::3])) - com_z
+# @njit(parallel=True)
+# def measure_rho_old(pipeline, step, mode = "both"):
+#     # com_x, com_y, com_z = calculate_com(pipeline, step)
+#     if mode == 'O':
+#         pipeline.modifiers.append(om.ExpressionSelectionModifier(expression="ParticleType == 1"))
+#         pipeline.modifiers.append(om.DeleteSelectedModifier())
+#     elif mode == 'H':
+#         pipeline.modifiers.append(om.ExpressionSelectionModifier(expression="ParticleType == 2"))
+#         pipeline.modifiers.append(om.DeleteSelectedModifier())
+#     data = pipeline.compute(step)
+#     com_x, com_y, com_z = data.tables['clusters']['Center of Mass'][0]
+#     x_at = data.particles.position.T[0] - com_x
+#     y_at = data.particles.position.T[1] - com_y
+#     z_at = data.particles.position.T[2] - com_z
 
+#     hist = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+#     for i in prange(len(x_at)):
+#         r = math.sqrt(x_at[i]*x_at[i] + y_at[i]*y_at[i] + z_at[i]*z_at[i])
+#         if r < settings.rmax_hist:
+#             bin_n = int(r/settings.dr_hist)
+#             hist[bin_n] += 1
+
+#     volumes = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+#     for i in prange(int(settings.rmax_hist / settings.dr_hist)):
+#         r = i*settings.dr_hist
+#         volumes[i] = 4/3*np.pi * ((r + settings.dr_hist)**3 - r**3)
+
+#     return hist/volumes
+
+
+@njit(parallel=True)
+def calculate_dipole_vectors(pipeline, step):
+    data = pipeline.compute(step)
+    nmol = data.particles.count//3
+    px = np.zeros(nmol)
+    py = np.zeros(nmol)
+    pz = np.zeros(nmol)
+    for mol in prange(nmol):
+        o = i * 3
+        i = o + 1
+        j = o + 2
+
+        six = data.particles.position.T[0,o] - data.particles.position.T[0,i]
+        siy = data.particles.position.T[1,o] - data.particles.position.T[1,i]
+        siz = data.particles.position.T[2,o] - data.particles.position.T[2,i]
+        sjx = data.particles.position.T[0,o] - data.particles.position.T[0,j]
+        sjy = data.particles.position.T[1,o] - data.particles.position.T[1,j]
+        sjz = data.particles.position.T[2,o] - data.particles.position.T[2,j]
+
+        px[mol] = (six + sjx) / 2
+        py[mol] = (siy + sjy) / 2
+        pz[mol] = (siz + sjz) / 2
+    return px, py, pz
+
+
+@njit(parallel=True)
+def calculate_com_molecules(pipeline, step):
+    data = pipeline.compute(step)
+    comtot_x, comtot_y, comtot_z = data.tables['clusters']['Center of Mass'][0]
+    nmol = data.particles.count // 3
+    coms_x = np.zeros(nmol)
+    coms_y = np.zeros(nmol)
+    coms_z = np.zeros(nmol)
+    for mol in prange(nmol):
+        slice_min = mol*3
+        slice_max = slice_min + 3
+        x, y, z = calculate_com(data.particles.position.T[0,slice_min:slice_max],
+                                data.particles.position.T[1,slice_min:slice_max],
+                                data.particles.position.T[2,slice_min:slice_max],
+                                data.particles.masses[slice_min:slice_max])
+        coms_x[mol] = x - comtot_x
+        coms_y[mol] = y - comtot_y
+        coms_z[mol] = z - comtot_z
+    return coms_x, coms_y, coms_z
+
+
+@njit(parallel=True)
+def calculate_distances(pipeline, step):
+    coms_x, coms_y, coms_z = calculate_com_molecules(pipeline, step)
+
+    dist = np.zeros(len(coms_x))
+    for i in prange(len(dist)):
+        r = math.sqrt(coms_x[i]*coms_x[i] + coms_y[i]*coms_y[i] + coms_z[i]*coms_z[i])
+        dist[i] = r
+        
+    return dist
+
+
+@njit(parallel=True)
+def measure_rho_step(pipeline, step):
+    dist = calculate_distances(pipeline, step)
     hist = np.zeros(int(settings.rmax_hist / settings.dr_hist))
-    for i in prange(len(x_at)):
-        r = math.sqrt(x_at[i]*x_at[i] + y_at[i]*y_at[i] + z_at[i]*z_at[i])
+    for i in prange(len(dist)):
+        r = dist[i]
         if r < settings.rmax_hist:
             bin_n = int(r/settings.dr_hist)
             hist[bin_n] += 1
@@ -110,54 +212,30 @@ def measure_rho(x_step, y_step, z_step, masses, mode = "O"):
 
 
 @njit(parallel=True)
-def calculate_dipole_vectors(x_step, y_step, z_step, masses):
-    nmol = len(masses)//3
-    px = np.zeros(nmol)
-    py = np.zeros(nmol)
-    pz = np.zeros(nmol)
-    for mol in prange(nmol):
-        o = i * 3
-        i = o + 1
-        j = o + 2
+def measure_rho_all(pipeline, step):
+    steps = pipeline.frames.last_frame
+    hist = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    for step in steps:
+        dist = calculate_distances(pipeline, step)
+        for i in prange(len(dist)):
+            r = dist[i]
+            if r < settings.rmax_hist:
+                bin_n = int(r/settings.dr_hist)
+                hist[bin_n] += 1
 
-        six = x_step[o] - x_step[i]
-        siy = y_step[o] - y_step[i]
-        siz = z_step[o] - z_step[i]
-        sjx = x_step[o] - x_step[j]
-        sjy = y_step[o] - y_step[j]
-        sjz = z_step[o] - z_step[j]
+    volumes = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    for i in prange(int(settings.rmax_hist / settings.dr_hist)):
+        r = i*settings.dr_hist
+        volumes[i] = 4/3*np.pi * ((r + settings.dr_hist)**3 - r**3)
 
-        px[mol] = (six + sjx) / 2
-        py[mol] = (siy + sjy) / 2
-        pz[mol] = (siz + sjz) / 2
-    return px, py, pz
+    return hist/volumes
 
 
 @njit(parallel=True)
-def calculate_com_molecules(x_step, y_step, z_step, masses):
-    comtot_x, comtot_y, comtot_z = calculate_com(x_step, y_step, z_step, masses)
-    nmol = len(masses)//3
-    coms_x = np.zeros(nmol)
-    coms_y = np.zeros(nmol)
-    coms_z = np.zeros(nmol)
-    for mol in prange(nmol):
-        slice_min = mol*3
-        slice_max = slice_min + 3
-        x, y, z = calculate_com(x_step[slice_min:slice_max],
-                                y_step[slice_min:slice_max],
-                                z_step[slice_min:slice_max],
-                                masses[slice_min:slice_max])
-        coms_x[mol] = x - comtot_x
-        coms_y[mol] = y - comtot_y
-        coms_z[mol] = z - comtot_z
-    return coms_x, coms_y, coms_z
-
-
-@njit(parallel=True)
-def calculate_dipole_projections(x_step, y_step, z_step, masses):
-    px, py, pz = calculate_dipole_vectors(x_step, y_step, z_step, masses)
-    coms_x, coms_y, coms_z = calculate_com_molecules(x_step, y_step, z_step, masses)
-    nmol = len(masses)//3
+def calculate_dipole_projections(pipeline, step):
+    px, py, pz = calculate_dipole_vectors(pipeline, step)
+    coms_x, coms_y, coms_z = calculate_com_molecules(pipeline, step)
+    nmol = len(coms_x)//3
     proj = np.zeros(nmol)
     for mol in prange(nmol):
         r = math.sqrt(coms_x[mol]*coms_x[mol] + coms_y[mol]*coms_y[mol] + coms_z[mol]*coms_z[mol])
@@ -168,4 +246,36 @@ def calculate_dipole_projections(x_step, y_step, z_step, masses):
         proj[mol] = projmol
     return proj
 
-        
+
+@njit(parallel=True)
+def calculate_dipole_projections_by_distance_step(pipeline, step):
+    proj = calculate_dipole_projections(pipeline, step)
+    dist = calculate_distances(pipeline, step)
+    hist = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    hist_count = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    for i in prange(len(dist)):
+        r = dist[i]
+        if r < settings.rmax_hist:
+            bin_n = int(r/settings.dr_hist)
+            hist[bin_n] += proj[i]
+            hist_count[bin_n] += 1
+
+    return hist/hist_count
+
+
+@njit(parallel=True)
+def calculate_dipole_projections_by_distance_all(pipeline, step=False):
+    hist = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    hist_count = np.zeros(int(settings.rmax_hist / settings.dr_hist))
+    steps = pipeline.frames.last_frame
+    for step in steps:
+        proj = calculate_dipole_projections(pipeline, step)
+        dist = calculate_distances(pipeline, step)
+        for i in prange(len(dist)):
+            r = dist[i]
+            if r < settings.rmax_hist:
+                bin_n = int(r/settings.dr_hist)
+                hist[bin_n] += proj[i]
+                hist_count[bin_n] += 1
+
+    return hist/hist_count

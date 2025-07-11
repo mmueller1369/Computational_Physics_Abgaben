@@ -30,7 +30,7 @@ def forceH2O(
     c6 = c2 * c2 * c2
     e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
 
-    for mol in prange(N//3):
+    for mol in range(N//3):
         # attributing indices
         o = 3*mol
         i = 3*mol + 1
@@ -77,7 +77,7 @@ def forceH2O(
 
         # intermolecular stuff
         for atom1, q1 in zip([o, i, j], [qO, qH, qH]):
-            for atom2 in prange(atom1+1, N):
+            for atom2 in range(atom1+1, N):
                 # only consider interactions between atoms of different molecules
                 if atom2//3 != mol:
                     # # properties needed
@@ -110,6 +110,8 @@ def forceH2O(
                     # update energies
                     e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
                     e_coul += e_coulol
+    if abs(np.sum(fx_inter)) > 1e-10:
+        print("x inter:", np.sum(fx_inter))
     for i in prange(N):
         fx[i] = fx_intra[i] + fx_inter[i]
         fy[i] = fy_intra[i] + fy_inter[i]

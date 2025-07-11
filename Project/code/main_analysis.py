@@ -4,6 +4,7 @@ import numpy as np
 import math
 import postprocessing
 import settings
+# import settings_SI as settings
 from scipy.optimize import curve_fit
 settings.init()
 
@@ -17,7 +18,7 @@ settings.init()
 # plt.legend()
 # plt.show()
 
-name = "pert_b_0.1"
+name = "pert_t_0.1"
 energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
 energies = np.loadtxt(energyfile).T
 plt.plot(energies[0]*0.5, energies[3], label = r"$E_{bond}$")

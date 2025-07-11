@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import postprocessing
 import forces
 import settings
+# import settings_SI as settings
 settings.init()
 
 def create_molecule(v1, v2):

@@ -2,6 +2,7 @@ import forces
 import numpy as np
 from numba import njit, prange
 import settings
+# import settings_SI as settings
 settings.init()
 
 

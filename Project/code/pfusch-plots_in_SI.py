@@ -15,7 +15,7 @@ alpha = 1/cutoff
 gamma_cut = forces.gamma(cutoff, alpha)
 J_to_kcpm = 1/4184*6.0022140857e23
 
-import settings
+import settings_SI as settings
 settings.init()
 kB = settings.kb
 eps0_el = settings.eps0_el
