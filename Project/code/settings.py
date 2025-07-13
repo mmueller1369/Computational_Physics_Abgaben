@@ -52,11 +52,11 @@ def init():
 
     # bounds
     xlo = 0
-    xhi = ini_x * a_lat
+    xhi = ini_x * a_lat * 10
     ylo = 0
-    yhi = ini_y * a_lat
+    yhi = ini_y * a_lat * 10
     zlo = 0
-    zhi = ini_z * a_lat
+    zhi = ini_z * a_lat * 10
     global bounds
     bounds = np.array([[xlo, xhi], [ylo, yhi], [zlo, zhi]])
 
@@ -105,9 +105,9 @@ def init():
 
     # ------ histogram properties ------ #
     global rmax_hist # maximum distance for histogram
-    rmax_hist = xhi / 2 # nm
+    rmax_hist = cutoff # nm
     global dr_hist # width of the histogram bins
-    dr_hist = 0.3*sigma # nm
+    dr_hist = 0.1*sigma # nm
 
 
 
