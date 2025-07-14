@@ -51,12 +51,12 @@ def init():
     masses = np.tile([massO, massH, massH], nmol)
 
     # bounds
-    xlo = 0
-    xhi = ini_x * a_lat * 10
-    ylo = 0
-    yhi = ini_y * a_lat * 10
-    zlo = 0
-    zhi = ini_z * a_lat * 10
+    xlo = - ini_x * a_lat / 2
+    xhi = ini_x * a_lat / 2
+    ylo = - ini_y * a_lat / 2
+    yhi = ini_y * a_lat / 2
+    zlo = - ini_z * a_lat / 2
+    zhi = ini_z * a_lat / 2
     global bounds
     bounds = np.array([[xlo, xhi], [ylo, yhi], [zlo, zhi]])
 

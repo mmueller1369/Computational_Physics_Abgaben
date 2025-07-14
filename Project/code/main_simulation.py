@@ -51,7 +51,7 @@ equilibrated_config = execute.run_simulation(
         settings.k_angle, settings.theta0,
         settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
         settings.qO, settings.qH, settings.eps0_el, settings.alpha],
-    steps=10000,
+    steps=20000,
     thermostat="Berendsen",
     thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
     trajfile=f"part_3/traj_eq",
@@ -61,20 +61,20 @@ equilibrated_config = execute.run_simulation(
     simulation_name=f"Part 3 - eq",
 )
 
-# execute.run_simulation(
-#     initial_config=equilibrated_config,
-#     force="H2O",
-#     force_params=[settings.k_bond, settings.s0, # Intramolecular parameters
-#         settings.k_angle, settings.theta0,
-#         settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
-#         settings.qO, settings.qH, settings.eps0_el, settings.alpha],
-#     steps=10000,
-#     # thermostat="Berendsen",
-#     # thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
-#     thermostat=False,
-#     trajfile=f"part_3/traj",
-#     energyfile=f"part_3/energy",
-#     tempfile=f"part_3/temp",
-#     n_save=10,
-#     simulation_name=f"Part 3 - run",
-# )
+execute.run_simulation(
+    initial_config=equilibrated_config,
+    force="H2O",
+    force_params=[settings.k_bond, settings.s0, # Intramolecular parameters
+        settings.k_angle, settings.theta0,
+        settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
+        settings.qO, settings.qH, settings.eps0_el, settings.alpha],
+    steps=40000,
+    # thermostat="Berendsen",
+    # thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
+    thermostat=False,
+    trajfile=f"part_3/traj",
+    energyfile=f"part_3/energy",
+    tempfile=f"part_3/temp",
+    n_save=10,
+    simulation_name=f"Part 3 - run",
+)

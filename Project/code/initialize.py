@@ -57,15 +57,15 @@ def cubic_lattice():
                 v2 /= np.linalg.norm(v2)
                 v2 *= settings.s0 * math.sin(settings.theta0/2)
                 # set positions of all components in same molecule
-                x[n] = ox - settings.bounds[0,1] / 2
-                y[n] = oy - settings.bounds[1,1] / 2
-                z[n] = oz - settings.bounds[2,1] / 2
-                x[n+1] = ox + v1[0] + v2[0] - settings.bounds[0,1] / 2
-                y[n+1] = oy + v1[1] + v2[1] - settings.bounds[1,1] / 2
-                z[n+1] = oz + v1[2] + v2[2] - settings.bounds[2,1] / 2
-                x[n+2] = ox + v1[0] - v2[0] - settings.bounds[0,1] / 2
-                y[n+2] = oy + v1[1] - v2[1] - settings.bounds[1,1] / 2
-                z[n+2] = oz + v1[2] - v2[2] - settings.bounds[2,1] / 2
+                x[n] = ox - settings.bounds[0,1]
+                y[n] = oy - settings.bounds[1,1]
+                z[n] = oz - settings.bounds[2,1]
+                x[n+1] = ox + v1[0] + v2[0] - settings.bounds[0,1]
+                y[n+1] = oy + v1[1] + v2[1] - settings.bounds[1,1]
+                z[n+1] = oz + v1[2] + v2[2] - settings.bounds[2,1]
+                x[n+2] = ox + v1[0] - v2[0] - settings.bounds[0,1]
+                y[n+2] = oy + v1[1] - v2[1] - settings.bounds[1,1]
+                z[n+2] = oz + v1[2] - v2[2] - settings.bounds[2,1]
                 # same initial velocity in same molecule
                 vx0 = 0.5 - np.random.rand()
                 vy0 = 0.5 - np.random.rand()

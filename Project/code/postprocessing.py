@@ -1,7 +1,7 @@
 import math
 from tqdm import tqdm
 import numpy as np
-from ovito.io import import_file
+from ovito.io import import_file, export_file
 import ovito.modifiers as om
 import ovito.data as od 
 import settings
@@ -16,9 +16,8 @@ def DeleteIncompleteMoleculesModifier(frame, data):
     molIDs = np.unique(data.particles['Molecule Identifier'][...])
     for molID in molIDs:
         if np.sum(data.particles['Molecule Identifier'] == molID) != 3:
-            om.ExpressionSelectionModifier(
-                expression=f"Molecule Identifier == {molID}").modify(frame, data)
-            om.DeleteSelectedModifier().modify(frame, data)
+            mask = data.particles['Molecule Identifier'] == molID
+            data.particles_.delete_elements(mask)
 
 def AnalyseMoleculesModifier(frame, data):
     molIDs = np.unique(data.particles['Molecule Identifier'][...])
@@ -66,87 +65,6 @@ def AnalyseMoleculesModifier(frame, data):
 
     data.tables['molecules'] = table
 
-
-def make_pipeline_droplet(filename, cutoff):
-    pipeline = import_file(filename)
-    pipeline.modifiers.append(DeactivatePBCsModifier)
-    pipeline.modifiers.append(om.ClusterAnalysisModifier(cutoff=cutoff,
-                                                         sort_by_size=True,
-                                                         unwrap_particles=True,
-                                                         compute_com=True,
-                                                         compute_gyration=True))
-    pipeline.modifiers.append(om.ExpressionSelectionModifier(expression="Cluster != 1"))
-    pipeline.modifiers.append(om.DeleteSelectedModifier())
-    pipeline.modifiers.append(DeleteIncompleteMoleculesModifier)
-    pipeline.modifiers.append(AnalyseMoleculesModifier)
-    return pipeline
-
-
-def calculate_rho(pipeline, step=False):
-    if step:
-        steps = [step]
-    else:
-        steps = np.arange(0, pipeline.num_frames)
-    hist = np.zeros(int(settings.rmax_hist / settings.dr_hist)+1)
-    for step in tqdm(steps, desc="Calculating rho"):
-        data = pipeline.compute(step)
-        dist = data.tables['molecules']['COM Distance'][...]
-        for i in range(len(dist)):
-            r = dist[i]
-            if r < settings.rmax_hist:
-                bin_n = int(r/settings.dr_hist)
-                hist[bin_n] += 1
-
-    volumes = np.zeros(int(settings.rmax_hist / settings.dr_hist)+1)
-    dist = np.arange(0, settings.rmax_hist, settings.dr_hist)
-    for r in dist:
-        volumes[i] = 4/3*np.pi * ((r + settings.dr_hist)**3 - r**3)
-
-    return dist, hist/volumes
-
-
-def calculate_dipole_projections(pipeline, step = False):
-    if step:
-        steps = [step]
-    else:
-        steps = np.arange(0, pipeline.num_frames)
-    # steps constant, but nmol in droplet changes -> dtype 0 object
-    projections = np.empty((len(steps),), dtype=object)
-    for step in tqdm(steps, desc="Calculating dipole projection"):
-        data = pipeline.compute(step)
-        directions = data.tables['molecules']['COM Vector'][...]
-        distances = data.tables['molecules']['COM Distance'][...]
-        unit_directions = directions / distances
-        dipoles = data.tables['molecules']['Dipole'][...]
-        projections[step] = np.array([np.dot(udir, p)
-                                      for udir, p in zip(unit_directions, dipoles)])
-    return projections
-
-
-def calculate_dipole_projections_by_distance(pipeline, step = False):
-    if step:
-        steps = [step]
-    else:
-        steps = np.arange(0, pipeline.num_frames)
-    hist = np.zeros(int(settings.rmax_hist / settings.dr_hist)+1)
-    hist_count = np.zeros(int(settings.rmax_hist / settings.dr_hist)+1)
-    for step in tqdm(steps, desc="Calculating dipole projection by distance"):
-        data = pipeline.compute(step)
-        directions = data.tables['molecules']['COM Vector'][...]
-        distances = data.tables['molecules']['COM Distance'][...]
-        unit_directions = directions / distances
-        dipoles = data.tables['molecules']['Dipole'][...]
-        proj = np.array([np.dot(udir, p) for udir, p in zip(unit_directions, dipoles)])
-        for i in range(len(distances)):
-            r = distances[i]
-            if r < settings.rmax_hist:
-                bin_n = int(r/settings.dr_hist)
-                hist[bin_n] += proj[i]
-                hist_count[bin_n] += 1
-    dist = np.arange(0, settings.rmax_hist, settings.dr_hist)
-    return dist, hist/hist_count
-
-
 def ExportMoleculePropertiesModifier(frame, data):
     molIDs = data.tables['molecules']['Molecule Identifier'][...]
     data.particles_.positions_[...] = data.particles.positions[...] - data.tables['clusters']['Center of Mass'][...][0]
@@ -159,19 +77,124 @@ def ExportMoleculePropertiesModifier(frame, data):
         data.particles_.forces_[idx_O] = data.tables['molecules']['Dipole Vector'][i]
 
 
+class PostprocessingTools:
+    def __init__(self, filename, every_nth_frame=1, cutoff=settings.cutoff):
+        # initializing the pipeline
+        self.filename = filename
+        self.pipeline = import_file(filename)
+        self.pipeline.modifiers.append(DeactivatePBCsModifier)
+        self.pipeline.modifiers.append(om.ClusterAnalysisModifier(
+            cutoff=cutoff,
+            sort_by_size=True,
+            unwrap_particles=True,
+            compute_com=True,
+            compute_gyration=True))
+        self.pipeline.modifiers.append(om.ExpressionSelectionModifier(
+            expression="Cluster != 1"))
+        self.pipeline.modifiers.append(om.DeleteSelectedModifier())
+        self.pipeline.modifiers.append(DeleteIncompleteMoleculesModifier)
+        self.pipeline.modifiers.append(AnalyseMoleculesModifier)
+
+        # calculating the data
+        self.every_nth_frame = every_nth_frame
+        self.ndata = int(self.pipeline.num_frames / every_nth_frame)
+        self.data = np.empty((self.ndata,), dtype=object)
+        pbar = tqdm(total=self.ndata, desc="Computing data from pipeline")
+        for s in range(self.ndata):
+            step = s*every_nth_frame
+            self.data[s] = self.pipeline.compute(step)
+            pbar.update(1)
+        pbar.close()
+    
+
+    def _setup_steps(self, step):
+        if step is not None:
+            steps = [int(step / self.every_nth_frame)]
+        else:
+            steps = np.arange(0, self.ndata)
+        return steps
 
 
+    def calculate_rho(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist):
+        steps = self._setup_steps(step)
+        total_bins = int(rmax_hist / dr_hist) + 1
+        hist = np.zeros(total_bins)
+        for s in steps:
+            dist = self.data[s].tables['molecules']['COM Distance'][...]
+            for i in range(len(dist)):
+                r = dist[i]
+                if r < rmax_hist:
+                    bin_n = int(r/dr_hist)
+                    hist[bin_n] += 1
 
-# file = '../output/part_3_save/traj_eq.txt'
-# pipeline_droplet = make_pipeline_droplet(file, 0.8)
-# pipeline_droplet.modifiers.append(ExportMoleculePropertiesModifier)
-# # print(pipeline_droplet.num_frames)
-# data = pipeline_droplet.compute(6052)
-# # export all properties
-# from ovito.io import export_file
-# export_file(pipeline_droplet, '../output/part_3_save/traj_eq_pipelined.*.txt',
-#             format='lammps/dump', multiple_frames=True, every_nth_frame=10,
-#             columns=['Particle Identifier', 'Molecule Identifier', 'Particle Type', 'Mass',
-#                      'Position.X', 'Position.Y', 'Position.Z',
-#                      'Velocity.X', 'Velocity.Y', 'Velocity.Z',
-#                      'Force.X', 'Force.Y', 'Force.Z',])
+        volumes = np.zeros(total_bins)
+        dist = np.linspace(0, rmax_hist, total_bins)
+        for i, r in enumerate(dist):
+            r -= dr_hist/2
+            volumes[i] = 4/3*np.pi * ((r + dr_hist)**3 - r**3)
+
+        return dist, hist/volumes/self.ndata
+
+
+    def calculate_dipole_projections(self, step=None):
+        steps = self._setup_steps(step)
+        # steps constant, but nmol in droplet changes -> dtype 0 object
+        projections = np.empty((len(steps),), dtype=object)
+        for s in steps:
+            directions = self.data[s].tables['molecules']['COM Vector'][...]
+            distances = self.data[s].tables['molecules']['COM Distance'][...]
+            unit_directions = directions / distances
+            dipoles = self.data[s].tables['molecules']['Dipole'][...]
+            projections[s] = np.array([np.dot(udir, p) 
+                                       for udir, p in zip(unit_directions, dipoles)])
+            
+        return projections
+
+
+    def calculate_dipole_projections_by_distance(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist):
+        steps = self._setup_steps(step)
+        total_bins = int(rmax_hist / dr_hist) + 1
+        hist = np.zeros(total_bins)
+        hist_count = np.zeros(total_bins)
+        projections = self.calculate_dipole_projections(step)
+        for s in steps:
+            projection = projections[s]
+            distances = self.data[s].tables['molecules']['COM Distance'][...]
+            for i in range(len(distances)):
+                r = distances[i]
+                if r < rmax_hist:
+                    bin_n = int(r/dr_hist)
+                    hist[bin_n] += projection[i]
+                    hist_count[bin_n] += 1
+        dist = np.linspace(0, rmax_hist, total_bins)
+        return dist, hist/hist_count
+
+
+    def calculate_droplet_properties(self, step=None):
+        steps = self._setup_steps(step)
+        rgs = np.zeros(len(steps))
+        asphericities = np.zeros(len(steps))
+        pbar = tqdm(total=len(steps), desc="Calculating droplet properties")
+        # radii
+        for s in steps:
+            gyration = self.data[s].tables['clusters']['Gyration Tensor'][0]
+            matrix = np.array([[gyration[0], gyration[3], gyration[4]],
+                            [gyration[3], gyration[1], gyration[5]],
+                            [gyration[4], gyration[5], gyration[2]]])
+            eigenvalues, eigenvectors = np.linalg.eig(matrix)
+            rgs[s] = math.sqrt(np.sum(eigenvalues))
+            asphericities[s] = 3/2*np.max(eigenvalues) - np.sum(eigenvalues)/2
+            pbar.update(1)
+        pbar.close()
+        return steps, rgs, asphericities
+    
+    def export_dump_files(self, name=None):
+        if name is None:
+            name = self.filename[:-4] + '_pipelined.*.txt'
+        self.pipeline.modifiers.append(ExportMoleculePropertiesModifier)
+        export_file(self.pipeline, name,
+                    format='lammps/dump', multiple_frames=True, every_nth_frame=self.every_nth_frame,
+                    columns=['Particle Identifier', 'Molecule Identifier', 'Particle Type', 'Mass',
+                             'Position.X', 'Position.Y', 'Position.Z',
+                             'Velocity.X', 'Velocity.Y', 'Velocity.Z',
+                             'Force.X', 'Force.Y', 'Force.Z',])

@@ -15,7 +15,10 @@ def create_molecule(v1, v2):
     x = pos[:,0]
     y = pos[:,1]
     z = pos[:,2]
-    x_com, y_com, z_com = postprocessing.calculate_com(x, y, z, settings.masses[0:3])
+    masses = settings.masses[:3]
+    x_com = np.sum(x*masses) / np.sum(masses)
+    y_com = np.sum(y*masses) / np.sum(masses)
+    z_com = np.sum(z*masses) / np.sum(masses)
     pos[:,0] -= x_com
     pos[:,1] -= y_com
     pos[:,2] -= z_com
