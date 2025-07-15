@@ -127,6 +127,7 @@ names = ["pert_s_0.05", "pert_s_0.1", "pert_t_0.05", "pert_t_0.1", "pert_b_0.05"
 
 # ----------------- Part 5 ----------------- #
 folder = "part_5"
+mixing_rule = "Lorentz-Berthelot"  # or "Geometric"
 x, y, z, vx, vy, vz = initialize.cubic_lattice_salt()
 f_initial = np.zeros(shape=(3))
 initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
@@ -139,33 +140,37 @@ equilibrated_config = execute.run_simulation(
         settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
         settings.qO, settings.qH, settings.eps0_el, settings.alpha,
         settings.eps_Na, settings.sigma_Na, settings.eps_I, settings.sigma_I, # Salt parameters
-        settings.cutoff_salt, settings.qNa, settings.qI, settings.alpha_salt],
+        settings.cutoff_salt, settings.qNa, settings.qI, settings.alpha_salt,
+        mixing_rule],
     steps=15000,
     masses=settings.masses_salt,
     thermostat="Berendsen",
     thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
-    trajfile=f"{folder}/traj_eq",
-    energyfile=f"{folder}/energy_eq",
-    tempfile=f"{folder}/temp_eq",
+    trajfile=f"{folder}/{mixing_rule}_traj_eq",
+    energyfile=f"{folder}/{mixing_rule}_energy_eq",
+    tempfile=f"{folder}/{mixing_rule}_temp_eq",
     n_save=10,
     simulation_name=f"Part 5 - eq",
 )
 
 execute.run_simulation(
     initial_config=equilibrated_config,
-    force="H2O",
+    force="Salt",
     force_params=[settings.k_bond, settings.s0, # Intramolecular parameters
         settings.k_angle, settings.theta0,
         settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
-        settings.qO, settings.qH, settings.eps0_el, settings.alpha],
+        settings.qO, settings.qH, settings.eps0_el, settings.alpha,
+        settings.eps_Na, settings.sigma_Na, settings.eps_I, settings.sigma_I, # Salt parameters
+        settings.cutoff_salt, settings.qNa, settings.qI, settings.alpha_salt,
+        mixing_rule],
     steps=40000,
     masses=settings.masses_salt,
     # thermostat="Berendsen",
     # thermostat_params=[settings.Tdesired, settings.tau, settings.deltat],
     thermostat=False,
-    trajfile=f"{folder}/traj",
-    energyfile=f"{folder}/energy",
-    tempfile=f"{folder}/temp",
+    trajfile=f"{folder}/{mixing_rule}_traj",
+    energyfile=f"{folder}/{mixing_rule}_energy",
+    tempfile=f"{folder}/{mixing_rule}_temp",
     n_save=10,
     simulation_name=f"Part 5 - run",
 )

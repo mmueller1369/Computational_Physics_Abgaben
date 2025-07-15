@@ -124,6 +124,7 @@ def forceSalt(
     k_bond, s0, k_angle, theta0, # Intramolecular parameters
     eps, sigma, cutoff, qO, qH, eps0_el, alpha, # Intermolecular parameters
     eps_Na, sigma_Na, eps_I, sigma_I, cutoff_salt, qNa, qI, alpha_salt, # Salt parameters
+    mixing_rule="Lorentz-Berthelot"
     ):
     fx_water, fy_water, fz_water, energies = forceH2O(
         x[:-2], y[:-2], z[:-2],
@@ -135,7 +136,10 @@ def forceSalt(
     fz = np.concatenate((fz_water, np.zeros(shape=2)))
     e_LJ, e_coul, e_bond, e_angle = energies
 
-    sigma_mix_salt = (sigma + sigma_Na) / 2.0
+    if mixing_rule == "Lorentz-Berthelot":
+        sigma_mix_salt = (sigma + sigma_Na) / 2.0
+    if mixing_rule == "Geometric":
+        sigma_mix_salt = math.sqrt(sigma * sigma_Na)
     eps_mix_salt = math.sqrt(eps_Na * eps_I)
     gamma_cut = gamma(cutoff, alpha)
     gamma_cut_salt = gamma(cutoff, alpha_salt)
@@ -153,22 +157,25 @@ def forceSalt(
     e_LJ_cut_salt = 4.0 * eps * c6_salt * (c6_salt - 1.0)
 
     # interaction of water with salt
-    for mol in range(N//3 - 2):
-        # attributing indices
-        o = 3*mol
-        i = 3*mol + 1
-        j = 3*mol + 2
-
-        for atom1, q1 in zip([o, i, j], [qO, qH, qH]):
-            for atom2, q2, sigma2, eps2 in zip([idxNa, idxI], [qNa, qI],
-                                               [sigma_Na, sigma_I], [eps_Na, eps_I]):
+    for atom2, q2, sigma2, eps2 in zip([idxNa, idxI], [qNa, qI],
+                                       [sigma_Na, sigma_I], [eps_Na, eps_I]):
+        if mixing_rule == "Lorentz-Berthelot":
+            sigma_mix = (sigma + sigma2) / 2.0
+        if mixing_rule == "Geometric":
+            sigma_mix = math.sqrt(sigma * sigma2)
+        eps_mix = math.sqrt(eps * eps2)
+    
+        for mol in range(N//3 - 2):
+            # attributing indices
+            o = 3*mol
+            i = 3*mol + 1
+            j = 3*mol + 2
+            for atom1, q1 in zip([o, i, j], [qO, qH, qH]):
                 # # properties needed
                 rolx = x[atom2] - x[atom1]
                 roly = y[atom2] - y[atom1]
                 rolz = z[atom2] - z[atom1]
                 rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
-                sigma_mix = (sigma + sigma2) / 2.0
-                eps_mix = math.sqrt(eps * eps2)
                 # # only for distances smaller than cutoff
                 if rol < cutoff:
                     if atom1%3 == 0:
