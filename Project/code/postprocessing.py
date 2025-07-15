@@ -1,9 +1,11 @@
 import math
 from tqdm import tqdm
 import numpy as np
+from scipy.optimize import curve_fit
 from ovito.io import import_file, export_file
 import ovito.modifiers as om
-import ovito.data as od 
+import ovito.data as od
+import forces
 import settings
 # import settings_SI as settings
 settings.init()
@@ -65,6 +67,18 @@ def AnalyseMoleculesModifier(frame, data):
 
     data.tables['molecules'] = table
 
+def MeasureHCOMModifier(frame, data):
+    atIDs = data.particles['Particle Identifier'][...]
+    data.particles_.create_property('HCOM Dist', dtype=np.float64, data=np.full(len(atIDs), np.nan))
+    mask = data.particles['Particle Type'] == 2
+    com_droplet = data.tables['clusters']['Center of Mass'][...][0]
+    for at, atID in enumerate(atIDs[mask]):
+        pos = data.particles['Position'][at]
+        rel_pos = pos - com_droplet
+        data.particles_['HCOM Dist'][at] = np.linalg.norm(rel_pos)
+
+    
+
 def ExportMoleculePropertiesModifier(frame, data):
     molIDs = data.tables['molecules']['Molecule Identifier'][...]
     data.particles_.positions_[...] = data.particles.positions[...] - data.tables['clusters']['Center of Mass'][...][0]
@@ -75,6 +89,11 @@ def ExportMoleculePropertiesModifier(frame, data):
         idx_O = np.where(mask_O)[0][0]
         data.particles_.velocities_[idx_O] = data.tables['molecules']['COM Vector'][i]
         data.particles_.forces_[idx_O] = data.tables['molecules']['Dipole Vector'][i]
+
+
+def fermi_distribution(r, r0, b, a):
+    exponent = (r-r0)/a
+    return b / (np.exp(exponent)+1)
 
 
 class PostprocessingTools:
@@ -94,6 +113,7 @@ class PostprocessingTools:
         self.pipeline.modifiers.append(om.DeleteSelectedModifier())
         self.pipeline.modifiers.append(DeleteIncompleteMoleculesModifier)
         self.pipeline.modifiers.append(AnalyseMoleculesModifier)
+        self.pipeline.modifiers.append(MeasureHCOMModifier)
 
         # calculating the data
         self.every_nth_frame = every_nth_frame
@@ -109,18 +129,24 @@ class PostprocessingTools:
 
     def _setup_steps(self, step):
         if step is not None:
-            steps = [int(step / self.every_nth_frame)]
+            if isinstance(step, int):
+                steps = np.array([step])
+            else:
+                steps = step
         else:
             steps = np.arange(0, self.ndata)
         return steps
 
 
-    def calculate_rho(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist):
+    def calculate_rho(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist, only_hatoms=False):
         steps = self._setup_steps(step)
         total_bins = int(rmax_hist / dr_hist) + 1
         hist = np.zeros(total_bins)
         for s in steps:
-            dist = self.data[s].tables['molecules']['COM Distance'][...]
+            if only_hatoms:
+                dist = self.data[s].particles['HCOM Dist'][...]
+            else:
+                dist = self.data[s].tables['molecules']['COM Distance'][...]
             for i in range(len(dist)):
                 r = dist[i]
                 if r < rmax_hist:
@@ -128,12 +154,16 @@ class PostprocessingTools:
                     hist[bin_n] += 1
 
         volumes = np.zeros(total_bins)
-        dist = np.linspace(0, rmax_hist, total_bins)
-        for i, r in enumerate(dist):
-            r -= dr_hist/2
-            volumes[i] = 4/3*np.pi * ((r + dr_hist)**3 - r**3)
+        for i in range(total_bins):
+            r_inner = i * dr_hist
+            r_outer = (i + 1) * dr_hist
+            volumes[i] = 4/3*np.pi * (r_outer**3 - r_inner**3)
 
-        return dist, hist/volumes/self.ndata
+        dist = (np.arange(total_bins) + 0.5) * dr_hist
+        rho = hist/volumes/len(steps)
+        params, pcov = curve_fit(fermi_distribution, dist[3:], rho[3:], p0=[1.2, 35, 0.1])
+
+        return dist, rho, params, pcov
 
 
     def calculate_dipole_projections(self, step=None):
@@ -143,8 +173,8 @@ class PostprocessingTools:
         for s in steps:
             directions = self.data[s].tables['molecules']['COM Vector'][...]
             distances = self.data[s].tables['molecules']['COM Distance'][...]
-            unit_directions = directions / distances
-            dipoles = self.data[s].tables['molecules']['Dipole'][...]
+            unit_directions = directions / distances[:, np.newaxis]
+            dipoles = self.data[s].tables['molecules']['Dipole Vector'][...]
             projections[s] = np.array([np.dot(udir, p) 
                                        for udir, p in zip(unit_directions, dipoles)])
             
@@ -170,13 +200,15 @@ class PostprocessingTools:
         return dist, hist/hist_count
 
 
-    def calculate_droplet_properties(self, step=None):
+    def calculate_droplet_properties(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist, smooth_hist = 3):
         steps = self._setup_steps(step)
         rgs = np.zeros(len(steps))
         asphericities = np.zeros(len(steps))
         pbar = tqdm(total=len(steps), desc="Calculating droplet properties")
-        # radii
+        params = np.zeros((len(steps), 3))
+        pcovs = np.zeros((len(steps), 3, 3))
         for s in steps:
+            # calculating properties obtained from the clustering
             gyration = self.data[s].tables['clusters']['Gyration Tensor'][0]
             matrix = np.array([[gyration[0], gyration[3], gyration[4]],
                             [gyration[3], gyration[1], gyration[5]],
@@ -184,10 +216,55 @@ class PostprocessingTools:
             eigenvalues, eigenvectors = np.linalg.eig(matrix)
             rgs[s] = math.sqrt(np.sum(eigenvalues))
             asphericities[s] = 3/2*np.max(eigenvalues) - np.sum(eigenvalues)/2
+            # fitting the density to a fermi distribution to obtain the radius
+            try:
+                # adding steps within smooth-hist range if possible
+                steps_hist = np.arange(max(0, s-smooth_hist),
+                                       min(len(steps), s+smooth_hist))
+                _, _, param, pcov = self.calculate_rho(step=steps_hist,
+                                                        rmax_hist=rmax_hist,
+                                                        dr_hist=dr_hist)
+                params[s] = param
+                pcovs[s] = pcov
+            except RuntimeError:
+                params[s] = np.nan
+                pcovs[s] = np.nan
+
             pbar.update(1)
         pbar.close()
-        return steps, rgs, asphericities
+        return steps, rgs, asphericities, params, pcovs
     
+
+    def calculate_electrostatic_potential_and_field(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist):
+        steps = self._setup_steps(step)
+        total_bins = int(rmax_hist / dr_hist) + 1
+        charge_by_type = {1: settings.qO, 2: settings.qH}
+        gamma_cut = forces.gamma(settings.cutoff, settings.alpha)
+        energy = np.zeros(total_bins)
+        field = np.zeros(total_bins)
+        pbar = tqdm(total=len(steps), desc="Calculating electrostatic potential and field")
+        for s in steps:
+            positions = self.data[s].particles['Position'][...]
+            types = self.data[s].particles['Particle Type'][...]
+            for i in range(len(positions)):
+                pos1 = positions[i]
+                q1 = charge_by_type[types[i]]
+                for j in range(i+1, len(positions)):
+                    pos2 = positions[j]
+                    q2 = charge_by_type[types[j]]
+                    rol = np.linalg.norm(pos1 - pos2)
+                    if rol < rmax_hist:
+                        bin_n = int(rol/dr_hist)
+                        if bin_n < total_bins:
+                            ff_coul, e_coul = forces.ffe_coul(rol, q1, q2, settings.eps0_el, settings.alpha, settings.cutoff, gamma_cut)
+                            energy[bin_n] += e_coul
+                            field[bin_n] += ff_coul * rol
+            pbar.update(1)
+
+        dist = (np.arange(total_bins) + 0.5) * dr_hist
+        return dist, energy/len(steps), field/len(steps)
+
+
     def export_dump_files(self, name=None):
         if name is None:
             name = self.filename[:-4] + '_pipelined.*.txt'

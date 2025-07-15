@@ -16,6 +16,7 @@ def run_simulation(
     force,
     force_params,
     steps,
+    masses=settings.masses,
     thermostat=False,
     thermostat_params=False,
     n_thermostat=1,
@@ -42,17 +43,18 @@ def run_simulation(
         ## save the specified parameters of the current state
         if step % n_save == 0:
             save_specified_properties(trajfile, tempfile, energyfile,
-                step, x, y, z, vx, vy, vz, fx, fy, fz, energies)
+                step, x, y, z, vx, vy, vz, fx, fy, fz, energies, masses)
         ## integrate equations of motion
         x, y, z, vx, vy, vz, fx, fy, fz, energies = integrators.VelocityVerlet(
             x, y, z,
             vx, vy, vz,
             fx, fy, fz,
+            masses,
             settings.deltat,
-            *force_params)
+            force, force_params)
         ## apply the thermostat
         if thermostat and step % n_thermostat == 0:
-            Tnow = tools.computeTemperature(vx, vy, vz, settings.masses)
+            Tnow = tools.computeTemperature(vx, vy, vz, masses)
             vx, vy, vz = thermostat_func(vx, vy, vz, Tnow, *thermostat_params)
             
     # after the run
@@ -69,20 +71,20 @@ def create_files(trajfile, tempfile, energyfile):
         trajfile = open(os.path.join(settings.path, f"{trajfile}.txt"), "w")
     if tempfile:
         tempfile = open(os.path.join(settings.path, f"{tempfile}.txt"), "w")
-        tempfile.write("# step T\n")
+        tempfile.write("# time T\n")
     if energyfile:
         energyfile = open(os.path.join(settings.path, f"{energyfile}.txt"), "w")
-        energyfile.write("# step e_LJ e_coul e_bond e_angle e_kin\n")
+        energyfile.write("# time e_LJ e_coul e_bond e_angle e_kin\n")
     return (trajfile, tempfile, energyfile)
 
 
 def save_specified_properties(
     trajfile, tempfile, energyfile, # files to be written in; None if parameter is skipped
-    step, x, y, z, vx, vy, vz, fx, fy, fz, energies, # current properties of the system
+    step, x, y, z, vx, vy, vz, fx, fy, fz, energies, masses, # current properties of the system
 ):
     if trajfile:
-        export.WriteTrajectory(trajfile, step, x, y, z, vx, vy, vz, fx, fy, fz)
+        export.WriteTrajectory(trajfile, step, x, y, z, vx, vy, vz, fx, fy, fz, masses)
     if tempfile:
-        export.WriteTemperature(tempfile, step, vx, vy, vz)
+        export.WriteTemperature(tempfile, step, vx, vy, vz, masses)
     if energyfile:
-        export.WriteEnergy(energyfile, step, vx, vy, vz, *energies)
+        export.WriteEnergy(energyfile, step, vx, vy, vz, *energies, masses)
