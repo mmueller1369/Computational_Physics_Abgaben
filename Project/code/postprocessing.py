@@ -1,11 +1,12 @@
 import math
+from numba import njit
 from tqdm import tqdm
 import numpy as np
 from scipy.optimize import curve_fit
 from ovito.io import import_file, export_file
 import ovito.modifiers as om
 import ovito.data as od
-import forces
+import tools
 import settings
 # import settings_SI as settings
 settings.init()
@@ -45,7 +46,7 @@ def AnalyseMoleculesModifier(frame, data):
         sis[mol] = si
         sjs[mol] = sj
         thetas[mol] = math.acos(np.dot(si, sj) / (np.linalg.norm(si) * np.linalg.norm(sj)))
-        dipoles[mol] = -(si + sj) / 2
+        dipoles[mol] = -(si + sj) / 2 / settings.s0
     table.create_property('Si', data=np.linalg.norm(sis, axis=1))
     table.create_property('Sj', data=np.linalg.norm(sjs, axis=1))
     table.create_property('Theta', data=thetas)
@@ -67,17 +68,14 @@ def AnalyseMoleculesModifier(frame, data):
 
     data.tables['molecules'] = table
 
-def MeasureHCOMModifier(frame, data):
+def MeasurePartCOMDistanceyModifier(frame, data):
     atIDs = data.particles['Particle Identifier'][...]
-    data.particles_.create_property('HCOM Dist', dtype=np.float64, data=np.full(len(atIDs), np.nan))
-    mask = data.particles['Particle Type'] == 2
+    data.particles_.create_property('COM Distance', dtype=np.float64, data=np.full(len(atIDs), np.nan))
     com_droplet = data.tables['clusters']['Center of Mass'][...][0]
-    for at, atID in enumerate(atIDs[mask]):
+    for at, atID in enumerate(atIDs):
         pos = data.particles['Position'][at]
         rel_pos = pos - com_droplet
-        data.particles_['HCOM Dist'][at] = np.linalg.norm(rel_pos)
-
-    
+        data.particles_['COM Distance'][at] = np.linalg.norm(rel_pos)
 
 def ExportMoleculePropertiesModifier(frame, data):
     molIDs = data.tables['molecules']['Molecule Identifier'][...]
@@ -89,6 +87,18 @@ def ExportMoleculePropertiesModifier(frame, data):
         idx_O = np.where(mask_O)[0][0]
         data.particles_.velocities_[idx_O] = data.tables['molecules']['COM Vector'][i]
         data.particles_.forces_[idx_O] = data.tables['molecules']['Dipole Vector'][i]
+    
+    colors = np.zeros((len(molIDs)*3, 3))
+    radii = np.zeros(len(molIDs)*3)
+    for i, t in enumerate(data.particles['Particle Type'][...]):
+        if t == 1:  # O
+            colors[i] = [1, 0, 0]  # rot
+            radii[i] = 0.16
+        elif t == 2:  # H
+            colors[i] = [1, 1, 1]  # weiß
+            radii[i] = 0.1
+    data.particles_.create_property("Color", data=colors)
+    data.particles_.create_property("Radius", data=radii)
 
 
 def fermi_distribution(r, r0, b, a):
@@ -113,7 +123,7 @@ class PostprocessingTools:
         self.pipeline.modifiers.append(om.DeleteSelectedModifier())
         self.pipeline.modifiers.append(DeleteIncompleteMoleculesModifier)
         self.pipeline.modifiers.append(AnalyseMoleculesModifier)
-        self.pipeline.modifiers.append(MeasureHCOMModifier)
+        self.pipeline.modifiers.append(MeasurePartCOMDistanceyModifier)
 
         # calculating the data
         self.every_nth_frame = every_nth_frame
@@ -143,10 +153,12 @@ class PostprocessingTools:
         total_bins = int(rmax_hist / dr_hist) + 1
         hist = np.zeros(total_bins)
         for s in steps:
+            dist_all = self.data[s].particles['COM Distance'][...]
             if only_hatoms:
-                dist = self.data[s].particles['HCOM Dist'][...]
+                dist = np.concatenate((dist_all[1::3], dist_all[2::3]))  # take indices 1,2,4,5,... (skip 0,3,6,...)
             else:
-                dist = self.data[s].tables['molecules']['COM Distance'][...]
+                dist = dist_all[::3]  # take indices 0,3,6,...
+                # dist = self.data[s].tables['molecules']['COM Distance'][...]
             for i in range(len(dist)):
                 r = dist[i]
                 if r < rmax_hist:
@@ -161,7 +173,8 @@ class PostprocessingTools:
 
         dist = (np.arange(total_bins) + 0.5) * dr_hist
         rho = hist/volumes/len(steps)
-        params, pcov = curve_fit(fermi_distribution, dist[3:], rho[3:], p0=[1.2, 35, 0.1])
+        # params, pcov = curve_fit(fermi_distribution, dist[3:], rho[3:], p0=[1.2, 35, 0.1])
+        params, pcov = curve_fit(fermi_distribution, dist, rho, p0=[1.2, 35, 0.1])
 
         return dist, rho, params, pcov
 
@@ -235,34 +248,31 @@ class PostprocessingTools:
         return steps, rgs, asphericities, params, pcovs
     
 
-    def calculate_electrostatic_potential_and_field(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist):
-        steps = self._setup_steps(step)
-        total_bins = int(rmax_hist / dr_hist) + 1
-        charge_by_type = {1: settings.qO, 2: settings.qH}
-        gamma_cut = forces.gamma(settings.cutoff, settings.alpha)
-        energy = np.zeros(total_bins)
-        field = np.zeros(total_bins)
-        pbar = tqdm(total=len(steps), desc="Calculating electrostatic potential and field")
-        for s in steps:
-            positions = self.data[s].particles['Position'][...]
-            types = self.data[s].particles['Particle Type'][...]
-            for i in range(len(positions)):
-                pos1 = positions[i]
-                q1 = charge_by_type[types[i]]
-                for j in range(i+1, len(positions)):
-                    pos2 = positions[j]
-                    q2 = charge_by_type[types[j]]
-                    rol = np.linalg.norm(pos1 - pos2)
-                    if rol < rmax_hist:
-                        bin_n = int(rol/dr_hist)
-                        if bin_n < total_bins:
-                            ff_coul, e_coul = forces.ffe_coul(rol, q1, q2, settings.eps0_el, settings.alpha, settings.cutoff, gamma_cut)
-                            energy[bin_n] += e_coul
-                            field[bin_n] += ff_coul * rol
-            pbar.update(1)
+    def calculate_electrostatic_potential_and_field(self, step=None, rmax_hist=settings.rmax_hist, dr_hist=settings.dr_hist, fitted_densities=False):
+        if not fitted_densities:
+            dist, rhoH, _, _ = self.calculate_rho(step=step, rmax_hist=rmax_hist, dr_hist=dr_hist, only_hatoms=True)
+            _, rhoO, _, _ = self.calculate_rho(step=step, rmax_hist=rmax_hist, dr_hist=dr_hist)
+        else:
+            dist, rhoH, rhoO = fitted_densities
+        qO = settings.qO
+        qH = settings.qH
+        rho = qO * rhoO + qH * rhoH
+        potential = np.zeros(len(dist))
+        for i, r in enumerate(dist):
+            integral = np.sum(rho[:i+1] * dist[:i+1]**2) * dr_hist
+            potential[i] = 1/settings.eps0_el * 1/r * integral
+        field = -np.gradient(potential, dist)
+        return dist, potential, field
 
-        dist = (np.arange(total_bins) + 0.5) * dr_hist
-        return dist, energy/len(steps), field/len(steps)
+
+    def calculate_droplet_temperature(self, step=None):
+        steps = self._setup_steps(step)
+        temperatures = np.zeros(len(steps))
+        for s in steps:
+            velocities = self.data[s].particles['Velocity'].T
+            masses = self.data[s].particles['Mass'][...]
+            temperatures[s] = tools.computeTemperature(*velocities, masses)
+        return steps, temperatures
 
 
     def export_dump_files(self, name=None):

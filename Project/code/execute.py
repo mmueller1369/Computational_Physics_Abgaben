@@ -51,7 +51,7 @@ def run_simulation(
             fx, fy, fz,
             masses,
             settings.deltat,
-            force, force_params)
+            force_func, force_params)
         ## apply the thermostat
         if thermostat and step % n_thermostat == 0:
             Tnow = tools.computeTemperature(vx, vy, vz, masses)

@@ -15,7 +15,7 @@ def computeKineticEnergy(vx, vy, vz, masses):
 
 def computeTemperature(vx, vy, vz, masses):
     ekin = computeKineticEnergy(vx, vy, vz, masses)
-    ekin_mean = ekin/settings.nmol/3
+    ekin_mean = ekin/len(masses)
     temp = 2/3 * ekin_mean / settings.kb
     return temp
 

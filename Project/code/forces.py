@@ -110,10 +110,10 @@ def forceH2O(
                     # update energies
                     e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
                     e_coul += e_coulol
-    for i in prange(N):
-        fx[i] = fx_intra[i] + fx_inter[i]
-        fy[i] = fy_intra[i] + fy_inter[i]
-        fz[i] = fz_intra[i] + fz_inter[i]
+                    
+    fx = fx_intra + fx_inter
+    fy = fy_intra + fy_inter
+    fz = fz_intra + fz_inter
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
 
