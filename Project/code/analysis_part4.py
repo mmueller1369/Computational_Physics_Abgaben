@@ -20,7 +20,7 @@ settings.init()
 
 trajfileeq = os.path.join(settings.path, f"part_3/traj_eq.txt")
 trajfile = os.path.join(settings.path, f"part_3/traj.txt")
-# pipeline = postprocessing.make_pipeline_droplet(trajfile, settings.cutoff)
+#pipeline = postprocessing.make_pipeline_droplet(trajfile, settings.cutoff)
 # r, rho = postprocessing.calculate_rho(pipeline, 1)
 # eq = PostprocessingTools(trajfileeq, 1001)
 prod = PostprocessingTools(trajfile, every_nth_frame=10)

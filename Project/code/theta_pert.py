@@ -18,20 +18,12 @@ settings.init()
 # plt.legend()
 # plt.show()
 
-# bond length perturbation
-k_bond = 1.058e5 * 4184 / 1e-18 *1e3
+# 
+k_angle = 75 * 4184 *1e3
 reduced_mass = settings.masses[0] * settings.masses[1] / (settings.masses[0] + settings.masses[1])  # in g/mole
-omega_exp = math.sqrt(k_bond / reduced_mass)#/2/pi  
+omega_exp = math.sqrt(k_angle  *2/ reduced_mass /(0.1e-9)**2 )
 print(f"Expected omega: {omega_exp:.2E} Hz")
-T_plot = 9.15e-15
-calculated_omega = 2* pi/ T_plot
-print(f"Calculated omega: {calculated_omega:.2E} Hz")
-err = np.sqrt( (2*pi/ T_plot * 0.2e-3)**2) 
-print(f"Error in omega: {err:.2E} Hz")
-
-
-
-name = "pert_s_0.1"
+name = "pert_t_0.1"
 
 energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
 energies = np.loadtxt(energyfile).T
@@ -60,7 +52,7 @@ axs[1].set_ylabel(r"$E$ [kcal/mole]")
 axs[1].legend()
 
 plt.tight_layout()
-plt.savefig(os.path.join(settings.path, f"overleaf_plots/bond_length/energy_subplot.png"))
+plt.savefig(os.path.join(settings.path, f"overleaf_plots/theta/energy_subplot.png"))
 plt.show()
 
 # Results bond length perturbation
@@ -80,17 +72,17 @@ plt.xlabel(r"$t$ [fs]")
 plt.ylabel(r"$s_i$ [nm]")
 plt.legend()
 plt.title(r"$s_i$ over time with mean value")
-plt.savefig(os.path.join(settings.path, f"overleaf_plots/bond_length/si_sj.png"))
+plt.savefig(os.path.join(settings.path, f"overleaf_plots/theta/si_sj.png"))
 plt.show()
 
 plt.figure(figsize=(10, 5))
-plt.plot(steps[:1500], theta[:1500] * 180 / np.pi, label=r"$\Theta$")
+plt.plot(steps, theta * 180 / np.pi, label=r"$\Theta$")
 plt.axhline(np.mean(theta) * 180 / np.pi, color='r', linestyle='--', label=r"$\langle \Theta \rangle$ = " + f"{np.mean(theta) * 180 / np.pi:.2f}°")
 plt.xlabel(r"$t$ [fs]")
 plt.ylabel(r"$\Theta$ [°]")
 plt.legend()    
 plt.title(r"$\Theta$ over time with mean value")
-plt.savefig(os.path.join(settings.path, f"overleaf_plots/bond_length/theta.png"))
+plt.savefig(os.path.join(settings.path, f"overleaf_plots/theta/theta.png"))
 
 # --- Fit beat acoustic function to si for first 200 steps ---
 def beat_func(t, A, omega1, omega2, phi, offset):
@@ -98,7 +90,7 @@ def beat_func(t, A, omega1, omega2, phi, offset):
     return A * np.cos(omega1 * t + phi) * np.cos(omega2 * t) + offset
 
 try:
-    si_arr = si[100:800]  
+    si_arr = theta[:]#[100:800]  
     t = np.arange(len(si_arr)) * settings.deltat  # Convert steps to time in fs
     # --- Compute average frequency from maxima ---
     from scipy.signal import find_peaks
@@ -118,7 +110,7 @@ try:
         plt.ylabel(r"$s_i$ [nm]")
         plt.legend()
         plt.title(r"Detected maxima in $s_i$")
-        plt.savefig(os.path.join(settings.path, f"overleaf_plots/bond_length/si_maxima.png"))
+        plt.savefig(os.path.join(settings.path, f"overleaf_plots/theta/si_maxima.png"))
         plt.show()
 
         # Plot number of maxima vs. position of peak and fit a straight line
@@ -133,38 +125,21 @@ try:
         plt.ylabel('Peak position [fs]')
         plt.title('Peak position vs. maxima number')
         plt.legend()
-        plt.savefig(os.path.join(settings.path, f"overleaf_plots/bond_length/si.png"))
+        plt.savefig(os.path.join(settings.path, f"overleaf_plots/theta/si.png"))
         plt.show()
         print(f"Fitted line slope (period): {coeffs[0]:.2E} fs per maxima")
-        print(f"Variance of slope: {cov[0,0]:.2E}")
+        #print(f"Variance of slope: {cov[0,0]:.2E}")
+        error = np.sqrt(cov[0,0])
+        print(f"Error in slope: {error:.2E} fs per maxima")
+        T_plot = coeffs[0]*1e-15
+        calculated_omega = 2* pi/ T_plot
+        print(f"Calculated omega: {calculated_omega:.2E} Hz")
+        err_om = np.sqrt( (2*pi/ T_plot * error)**2) 
+        print(f"Error in omega: {err_om:.2E} Hz")
+
+
     else:
         print("Not enough maxima found to compute average frequency.")
 except Exception as e:
     print("Fit failed:", e)
-
-
-# def oscillation(t, A, omega, phi, offset):
-#     return A * np.cos(omega * t + phi) + offset
-
-# test for si
-# name = "long_pert_s_0.1"
-# trajfile = os.path.join(settings.path, f"part_1/{name}_traj.txt")
-# energyfile = os.path.join(settings.path, f"part_1/{name}_energy.txt")
-# step, x, y, z = postprocessing.read_data(trajfile)
-# si, sj, theta = postprocessing.calculate_molecule_properties(x, y, z)
-
-# # Conversion factor from (kcal/mol)/(u*nm^2) to 1/fs (angular frequency)
-# conv_omega = math.sqrt(4184 * 1e21) * 1e-15
-# omega_exp = math.sqrt(settings.k_bond / settings.masses[0])/conv_omega
-# print(conv_omega, omega_exp)
-# # params, _ = curve_fit(oscillation, step*settings.deltat, sj[:,0])#, p0=[0.01, omega_exp, 0, settings.s0])
-# # print("Fitted parameters:")
-# # print(f"A: {params[0]}, omega: {params[1]}, phi: {params[2]}, offset: {params[3]}")
-# plt.figure(figsize=(10, 5))
-# plt.plot(step*settings.deltat, sj[:,0], label="si")
-# # plt.plot(step*settings.deltat, oscillation(step*settings.deltat, *params), label="fitted curve")
-# plt.xlabel(r"$t$ [fs]")
-# plt.ylabel(r"$s_i$ [nm]")
-# plt.legend()
-# plt.show()
 
