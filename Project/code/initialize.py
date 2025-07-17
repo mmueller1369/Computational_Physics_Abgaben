@@ -97,3 +97,84 @@ def cubic_lattice():
     vx, vy, vz = tools.rescaleVelocity(vx, vy, vz, settings.Tdesired, Trandom)
 
     return x, y, z, vx, vy, vz
+
+
+def cubic_lattice_salt():
+    natoms = 3 * settings.nmol + 2
+    x = np.zeros(natoms)
+    y = np.zeros(natoms)
+    z = np.zeros(natoms)
+    vx = np.zeros(natoms)
+    vy = np.zeros(natoms)
+    vz = np.zeros(natoms)
+    n = 0
+    pbar = tqdm(total=settings.nmol, desc="Initializing H2O molecules")
+    for nx in range(settings.ini_x):
+        for ny in range(settings.ini_y):
+            for nz in range(settings.ini_z):
+                # position of oxygen
+                ox = nx * settings.a_lat + settings.a_lat / 2.0
+                oy = ny * settings.a_lat + settings.a_lat / 2.0
+                oz = nz * settings.a_lat + settings.a_lat / 2.0
+                # creating first random vector v1
+                v1 = np.random.rand(3)
+                v1 *= random.choice([-1, 1]) # randomize sign for full sphere
+                # v1 = np.array([1.0,0.0,0.0])
+                v1 /= np.linalg.norm(v1)
+                v1 *= settings.s0 * math.cos(settings.theta0/2)
+                # creating second random vector which yields v2 orthogonal to v1
+                v2_helper = np.random.rand(3)
+                v2_helper *= random.choice([-1, 1])
+                # v2_helper = np.array([0.0,1.0,0.0])
+                v2 = np.cross(v1, v2_helper)
+                v2 /= np.linalg.norm(v2)
+                v2 *= settings.s0 * math.sin(settings.theta0/2)
+                # set positions of all components in same molecule
+                x[n] = ox - settings.bounds[0,1]
+                y[n] = oy - settings.bounds[1,1]
+                z[n] = oz - settings.bounds[2,1]
+                x[n+1] = ox + v1[0] + v2[0] - settings.bounds[0,1]
+                y[n+1] = oy + v1[1] + v2[1] - settings.bounds[1,1]
+                z[n+1] = oz + v1[2] + v2[2] - settings.bounds[2,1]
+                x[n+2] = ox + v1[0] - v2[0] - settings.bounds[0,1]
+                y[n+2] = oy + v1[1] - v2[1] - settings.bounds[1,1]
+                z[n+2] = oz + v1[2] - v2[2] - settings.bounds[2,1]
+                # same initial velocity in same molecule
+                vx0 = 0.5 - np.random.rand()
+                vy0 = 0.5 - np.random.rand()
+                vz0 = 0.5 - np.random.rand()
+                vx[n] = vx0
+                vy[n] = vy0
+                vz[n] = vz0
+                vx[n+1] = vx0
+                vy[n+1] = vy0
+                vz[n+1] = vz0
+                vx[n+2] = vx0
+                vy[n+2] = vy0
+                vz[n+2] = vz0
+                n += 3
+                pbar.update(1)
+    pbar.close()
+    
+    # add one salt ions
+    x[-1] = settings.dist_salt / 2.0
+    y[-1] = 0
+    z[-1] = settings.bounds[2,1] + settings.a_lat / 2.0
+    x[-2] = - settings.dist_salt / 2.0
+    y[-2] = 0
+    z[-2] = settings.bounds[2,1] + settings.a_lat / 2.0
+
+    # cancel the linear momentum
+    total_mass = np.sum(settings.masses_salt)
+    vx_com = np.sum(vx * settings.masses_salt) / total_mass
+    vy_com = np.sum(vy * settings.masses_salt) / total_mass
+    vz_com = np.sum(vz * settings.masses_salt) / total_mass
+    vx -= vx_com
+    vy -= vy_com
+    vz -= vz_com
+
+    # rescale the velocity to the desired temperature
+    Trandom = tools.computeTemperature(vx, vy, vz, settings.masses_salt)
+    vx, vy, vz = tools.rescaleVelocity(vx, vy, vz, settings.Tdesired, Trandom)
+
+    return x, y, z, vx, vy, vz

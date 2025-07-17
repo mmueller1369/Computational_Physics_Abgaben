@@ -110,12 +110,120 @@ def forceH2O(
                     # update energies
                     e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
                     e_coul += e_coulol
-    if abs(np.sum(fx_inter)) > 1e-10:
-        print("x inter:", np.sum(fx_inter))
-    for i in prange(N):
-        fx[i] = fx_intra[i] + fx_inter[i]
-        fy[i] = fy_intra[i] + fy_inter[i]
-        fz[i] = fz_intra[i] + fz_inter[i]
+                    
+    fx = fx_intra + fx_inter
+    fy = fy_intra + fy_inter
+    fz = fz_intra + fz_inter
+    energies = e_LJ, e_coul, e_bond, e_angle
+    return fx, fy, fz, energies
+
+
+@njit(parallel=True)
+def forceSalt(
+    x, y, z,
+    k_bond, s0, k_angle, theta0, # Intramolecular parameters
+    eps, sigma, cutoff, qO, qH, eps0_el, alpha, # Intermolecular parameters
+    eps_Na, sigma_Na, eps_I, sigma_I, cutoff_salt, qNa, qI, alpha_salt, # Salt parameters
+    mixing_rule="Lorentz-Berthelot"
+    ):
+    fx_water, fy_water, fz_water, energies = forceH2O(
+        x[:-2], y[:-2], z[:-2],
+        k_bond, s0, k_angle, theta0, # Intramolecular parameters
+        eps, sigma, cutoff, qO, qH, eps0_el, alpha, # Intermolecular parameters
+        )
+    fx = np.concatenate((fx_water, np.zeros(shape=2)))
+    fy = np.concatenate((fy_water, np.zeros(shape=2)))
+    fz = np.concatenate((fz_water, np.zeros(shape=2)))
+    e_LJ, e_coul, e_bond, e_angle = energies
+
+    if mixing_rule == "Lorentz-Berthelot":
+        sigma_mix_salt = (sigma + sigma_Na) / 2.0
+    if mixing_rule == "Geometric":
+        sigma_mix_salt = math.sqrt(sigma * sigma_Na)
+    eps_mix_salt = math.sqrt(eps_Na * eps_I)
+    gamma_cut = gamma(cutoff, alpha)
+    gamma_cut_salt = gamma(cutoff, alpha_salt)
+
+    N = len(x)
+    idxNa = N - 2
+    idxI = N - 1
+
+    c2 = sigma * sigma / cutoff / cutoff
+    c6 = c2 * c2 * c2
+    e_LJ_cut = 4.0 * eps * c6 * (c6 - 1.0)
+
+    c2_salt = sigma * sigma / cutoff / cutoff
+    c6_salt = c2_salt * c2_salt * c2_salt
+    e_LJ_cut_salt = 4.0 * eps * c6_salt * (c6_salt - 1.0)
+
+    # interaction of water with salt
+    for atom2, q2, sigma2, eps2 in zip([idxNa, idxI], [qNa, qI],
+                                       [sigma_Na, sigma_I], [eps_Na, eps_I]):
+        if mixing_rule == "Lorentz-Berthelot":
+            sigma_mix = (sigma + sigma2) / 2.0
+        if mixing_rule == "Geometric":
+            sigma_mix = math.sqrt(sigma * sigma2)
+        eps_mix = math.sqrt(eps * eps2)
+    
+        for mol in range(N//3 - 2):
+            # attributing indices
+            o = 3*mol
+            i = 3*mol + 1
+            j = 3*mol + 2
+            for atom1, q1 in zip([o, i, j], [qO, qH, qH]):
+                # # properties needed
+                rolx = x[atom2] - x[atom1]
+                roly = y[atom2] - y[atom1]
+                rolz = z[atom2] - z[atom1]
+                rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
+                # # only for distances smaller than cutoff
+                if rol < cutoff:
+                    if atom1%3 == 0:
+                        ff_LJol, e_LJol = ffe_LJ(rol, sigma_mix, eps_mix)
+                    else:
+                        ff_LJol, e_LJol = 0, 0
+                    # # Coulomb interaction for all
+                    ff_coulol, e_coulol = ffe_coul(rol, q1, q2, eps0_el,
+                                                    alpha, cutoff, gamma_cut)
+                else:
+                    ff_LJol, e_LJol = 0, 0
+                    ff_coulol, e_coulol = 0, 0
+                ff_inter = ff_LJol + ff_coulol
+                # update forces
+                fx[atom1] -= ff_inter * rolx
+                fy[atom1] -= ff_inter * roly
+                fz[atom1] -= ff_inter * rolz
+                fx[atom2] += ff_inter * rolx
+                fy[atom2] += ff_inter * roly
+                fz[atom2] += ff_inter * rolz
+                # update energies
+                e_LJ += e_LJol - e_LJ_cut if ff_LJol != 0 else 0
+                e_coul += e_coulol
+    
+    # interaction of salt with salt
+    rolx = x[idxI] - x[idxNa]
+    roly = y[idxI] - y[idxNa]
+    rolz = z[idxI] - z[idxNa]
+    rol = math.sqrt(rolx*rolx + roly*roly + rolz*rolz)
+    if rol < cutoff_salt:
+        ff_LJol, e_LJol = ffe_LJ(rol, sigma_mix_salt, eps_mix_salt)
+        ff_coulol, e_coulol = ffe_coul(rol, qNa, qI, eps0_el,
+                                        alpha_salt, cutoff_salt, gamma_cut_salt)
+    else:
+        ff_LJol, e_LJol = 0, 0
+        ff_coulol, e_coulol = 0, 0
+    ff_inter = ff_LJol + ff_coulol
+    # update forces
+    fx[idxNa] -= ff_inter * rolx
+    fy[idxNa] -= ff_inter * roly
+    fz[idxNa] -= ff_inter * rolz
+    fx[idxI] += ff_inter * rolx
+    fy[idxI] += ff_inter * roly
+    fz[idxI] += ff_inter * rolz
+    # update energies
+    e_LJ += e_LJol - e_LJ_cut_salt if ff_LJol != 0 else 0
+    e_coul += e_coulol
+
     energies = e_LJ, e_coul, e_bond, e_angle
     return fx, fy, fz, energies
 

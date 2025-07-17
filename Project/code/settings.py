@@ -94,6 +94,29 @@ def init():
     global alpha
     alpha = 1/cutoff # 1/nm
 
+    # salt
+    global eps_Na
+    eps_Na = 0.0022 / 4.184 # kcal/mole
+    global sigma_Na
+    sigma_Na = 0.385 # nm
+    global eps_I
+    eps_I = 2.972 / 4.184 # kcal/mole
+    global sigma_I
+    sigma_I = 0.480 # nm
+    global dist_salt
+    dist_salt = sigma_Na * 2**(1/6) # nm; since eps_I >> eps_Na
+    global cutoff_salt
+    cutoff_salt = 2.5 * sigma_Na # nm
+    global masses_salt
+    masses_salt = np.concatenate((masses, np.array([22.99, 126.90])))
+    global qNa
+    qNa = 1.0 # e
+    global qI
+    qI = -1.0 # e
+    global alpha_salt
+    alpha_salt = 1/cutoff_salt # 1/nm
+
+
 
 
     # ------  conversion factor ------ #
@@ -105,9 +128,11 @@ def init():
 
     # ------ histogram properties ------ #
     global rmax_hist # maximum distance for histogram
-    rmax_hist = cutoff # nm
+    rmax_hist = 1.7 # nm
+    global rmin_hist # minimum distance for histogram
+    rmin_hist = 0.3 # nm
     global dr_hist # width of the histogram bins
-    dr_hist = 0.1*sigma # nm
+    dr_hist = 0.2*sigma # nm
 
 
 
