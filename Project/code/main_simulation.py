@@ -16,26 +16,26 @@ settings.init()
 # perturbations_length = [.01]
 # perturbations_angle = [10.45 * np.pi/180]
 
-# for pert_length, pert_angle, name in zip(perturbations_length, perturbations_angle, names):
-#     x, y, z, vx, vy, vz = initialize.single(pert_length=pert_length, pert_angle=pert_angle)
-#     f_initial = np.zeros(shape=(3))
-#     initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
-#     settings.bounds = np.array([[-1,1], [-1,1], [-1,1]])
+for pert_length, pert_angle, name in zip(perturbations_length, perturbations_angle, names):
+    x, y, z, vx, vy, vz = initialize.single(pert_length=pert_length, pert_angle=pert_angle)
+    f_initial = np.zeros(shape=(3))
+    initial_config = [x, y, z, vx, vy, vz, f_initial, f_initial, f_initial]
+    settings.bounds = np.array([[-1,1], [-1,1], [-1,1]])
 
-#     execute.run_simulation(
-#         initial_config=initial_config,
-#         force="H2O",
-#         force_params=[settings.k_bond, settings.s0, # Intramolecular parameters
-#             settings.k_angle, settings.theta0,
-#             settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
-#             settings.qO, settings.qH, settings.eps0_el, settings.alpha],
-#         steps=10000,
-#         thermostat=False,
-#         trajfile=f"part_1/{name}_traj",
-#         energyfile=f"part_1/{name}_energy",
-#         n_save=1,
-#         simulation_name=f"Part 1 - {name}",
-#     )
+    execute.run_simulation(
+        initial_config=initial_config,
+        force="H2O",
+        force_params=[settings.k_bond, settings.s0, # Intramolecular parameters
+            settings.k_angle, settings.theta0,
+            settings.eps, settings.sigma, settings.cutoff, # Intramolecular parameters
+            settings.qO, settings.qH, settings.eps0_el, settings.alpha],
+        steps=10000,
+        thermostat=False,
+        trajfile=f"part_1/{name}_traj",
+        energyfile=f"part_1/{name}_energy",
+        n_save=1,
+        simulation_name=f"Part 1 - {name}",
+    )
 
 
 
