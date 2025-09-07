@@ -55,7 +55,7 @@ def calculate_grid(mol1, mol2, n_grid, maximal_distance, minimal_distance, offse
                 mol2_shifted = mol2 + np.array([x, y, 0.0])
                 grid[j, i] = calculate_energy(mol1, mol2_shifted)
             else:
-                grid[j, i] = np.nan#argmax(grid)
+                grid[j, i] = np.nanargmax(grid)
     return grid
 
 def calculate_values(angles, offsets, n_grid, maximal_distance, minimal_distance):
@@ -97,22 +97,14 @@ def heatmap(values, angle, maximal_distance, cbar_boundaries, flip=1, mark_secon
     color_com = 'black'
     color_bond = 'gray'
     show_fig = False
-    fig, ax = plt.subplots(figsize=(5,3))
-
-    # Achsenbeschriftungen und Ticks
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_xticks([-1, 0, 1])
-    ax.set_yticks([-1, 0, 1])
-    ax.set_xticklabels([r'-1 $\sigma_{OO}$', '0', r'+1 $\sigma_{OO}$'])
-    ax.set_yticklabels([r'-1 $\sigma_{OO}$', '0', r'+1 $\sigma_{OO}$'])
+    fig, ax = plt.subplots(figsize=(2.5,2.5))
 
     # Marker für O, H1, H2, COM
     # Erst Linien, dann Marker
     ax.plot([H1_x, O_x, H2_x], [H1_y, O_y, H2_y], lw=lw_flat, color=color_bond, zorder=1)
     ax.scatter([O_x], [O_y], c=color_o, marker='o', label='O', s=marker_size**2*4, edgecolors='black', linewidths=.5, zorder=2)
     ax.scatter([H1_x, H2_x], [H1_y, H2_y], c=color_h, marker='o', edgecolors='black', linewidths=.5, label='H', s=marker_size**2, zorder=2)
-    # ax.scatter([com_x], [com_y], c=color_com, marker='*', label='COM', s=marker_size**2/4, zorder=2)
+    ax.scatter([com_x], [com_y], c=color_com, marker='*', label='COM', s=marker_size**2/4, zorder=2)
     
     if mark_second_molecule:
         rad = angle*np.pi/180
@@ -155,11 +147,8 @@ def heatmap(values, angle, maximal_distance, cbar_boundaries, flip=1, mark_secon
     im = ax.imshow(values, extent=(-ext, ext, -ext, ext),
                 origin='lower', cmap='viridis',
                 vmin=min_value, vmax=max_value)
-
-    # Colorbar hinzufügen
-    cbar = fig.colorbar(im, ax=ax, orientation='vertical')
-    cbar.set_label(r'$E$ (kcal/mol)')
-
+    ax.set_xticks([])
+    ax.set_yticks([])
     # ax.plot([-ext, ext], [0, 0], color='black', lw=1)
     if legend:
         ax.legend(loc='upper left')
@@ -221,8 +210,6 @@ def heatmap(values, angle, maximal_distance, cbar_boundaries, flip=1, mark_secon
 def save_all(n_grid=100, maximal_distance=1.5*settings.sigma, minimal_distance=0.5*settings.sigma):
     angles = [0, 45, -45, 90]
     offsets = [0.0, 0.5*settings.sigma, 1.0*settings.sigma]
-    offsets = [0]
-    angles = [0]#, 45, -45, 90]
     values = calculate_values(angles, offsets, n_grid, maximal_distance, minimal_distance)
     max_value = min(np.nanmax(values), 1)
     min_value = np.nanmin(values)
@@ -234,9 +221,9 @@ def save_all(n_grid=100, maximal_distance=1.5*settings.sigma, minimal_distance=0
             for offset in offsets:
                 i = angles.index(angle)
                 j = offsets.index(offset)
-                heatmap(values[f, i, j], angle, maximal_distance, cbar_boundaries, flip, mark_second_molecule=False)
+                heatmap(values[f, i, j], angle, maximal_distance, cbar_boundaries, flip)
                 savename = f"angle_{angle}_offset_{offset/settings.sigma:.1f}_sigma_flip_{flip}.png"
-                plt.savefig(savename, dpi=300, bbox_inches='tight', transparent=True)
+                plt.savefig(savename, dpi=300, bbox_inches='tight')
 
 
 
@@ -255,7 +242,7 @@ def save_colorbar(cmap='viridis', label=r'$E$ (kcal/mol)'):
         if orientation == 'vertical':
             fig, ax = plt.subplots(figsize=(1, 10))
         else:
-            fig, ax = plt.subplots(figsize=(6, .3))
+            fig, ax = plt.subplots(figsize=(6, 1))
         fig.subplots_adjust(bottom=0.5)
         norm = mpl.colors.Normalize(vmin=min_value, vmax=max_value)
         sm = plt.cm.ScalarMappable(cmap=cmap, norm=norm)
@@ -265,5 +252,5 @@ def save_colorbar(cmap='viridis', label=r'$E$ (kcal/mol)'):
         plt.savefig(savename, dpi=300, bbox_inches='tight')
         plt.close(fig)
     
-save_all()
-# save_colorbar()
+# save_all()
+save_colorbar()

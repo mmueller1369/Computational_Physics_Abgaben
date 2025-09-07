@@ -67,35 +67,13 @@ plt.savefig(os.path.join(settings.path, f"images/{folder}_density.png"), dpi=300
 plt.show()
 
 
-# -------------- Density without OH label -------------- #
-rfit = np.linspace(0,settings.rmax_hist, 100)
-plt.plot(r, rho, color='red', label=r'$\langle\rho_\text{O}(r)\rangle_t$')
-plt.plot(rH, rhoH, color='gray', label=r'$\langle\rho_\text{H}(r)\rangle_t$ / 2')
-plt.axhline(bulk, label=r'$\hat\rho$', color='purple')
-# plt.fill_between(rfit,
-#                  bulk+ubulk, bulk-ubulk, color='purple', alpha=.2)
-plt.axvline(radius, label=r'$R$', color='blue')
-# plt.fill_between([radius+uradius, radius-uradius],
-#                  0, 40, color='blue', alpha=.2)
-plt.axvline(radius+sharp, label=r'$R \pm a$', color='orange')
-plt.axvline(radius-sharp, color='orange')
-plt.plot(rfit, fermi_distribution(rfit, *params), label=r'$\rho_\mathrm{Fermi}(r)$ fit', color='black')
-plt.legend()
-plt.xlabel(r'$r$ [nm]')
-plt.ylabel(r'$\langle\rho\rangle_t$ [particles/nm$^3$]')
-# plt.xlim(0.1,settings.rmax_hist)
-# plt.ylim(0,38)
-plt.savefig(os.path.join(settings.path, f"images/{folder}_density.png"), dpi=300, bbox_inches='tight')
-plt.show()
-
-
 # -------------- Dipole Projection -------------- #
 dist, value = prod.calculate_dipole_projections_by_distance()
 fig, ax2 = plt.subplots()
 color2 = 'black'
 ax2.set_xlabel(r'$r$ [nm]')
 ax2.set_ylabel(r'$\langle\rho\rangle_t$ [particles/nm$^3$]')
-ln2 = ax2.plot(rfit, fermi_distribution(rfit, *params), label=r'$\rho_\mathrm{Fermi}(r)$ fit', color=color2)
+ln2 = ax2.plot(rfit, fermi_distribution(rfit, *params), label=r'$\langle\rho_O(t)\rangle_t$ fit', color=color2)
 ax2.tick_params(axis='y', labelcolor=color2)
 
 ax1 = ax2.twinx()

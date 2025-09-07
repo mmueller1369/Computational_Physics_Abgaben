@@ -2,10 +2,7 @@ import forces
 import numpy as np
 import matplotlib.pyplot as plt
 import settings
-# import settings_SI as settings
 settings.init()
-
-# settings.eps0_el = 1
 
 gamma_cut = forces.gamma(settings.cutoff, settings.alpha)
 rols = np.linspace(settings.cutoff*.05, settings.cutoff, 100)
